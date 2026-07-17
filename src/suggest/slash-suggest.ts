@@ -62,7 +62,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		// (foldable callout) needs its own scope registration.
 		this.scope.register(["Shift"], "Enter", (evt) => {
 			const hit = this.rendered.find((r) => r.el.hasClass("is-selected"));
-			if (hit && evt instanceof KeyboardEvent) {
+			if (hit && evt.instanceOf(KeyboardEvent)) {
 				this.selectSuggestion(hit.item, evt);
 				this.close();
 				return false;
@@ -176,7 +176,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	/** Scope our styling to this popover and mount the pill — idempotent. */
 	private adoptPopover(itemEl: HTMLElement): void {
 		const container = itemEl.closest(".suggestion-container");
-		if (container instanceof HTMLElement) {
+		if (container && container.instanceOf(HTMLElement)) {
 			container.addClass("slashosaurus-popover");
 			this.pill.mount(container);
 		}
