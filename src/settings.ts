@@ -1,4 +1,5 @@
-import { PluginSettingTab, Setting, moment, type App, type Plugin } from "obsidian";
+import { PluginSettingTab, Setting, type App, type Plugin } from "obsidian";
+import { formatDate } from "./core/dateformat";
 import type { UserSnippet } from "./core/types";
 import { validateSnippet } from "./core/snippets";
 
@@ -132,6 +133,6 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	}
 
 	private dateFormatDesc(format: string): string {
-		return `Moment.js format for the "Today's date" block. Currently: ${moment().format(format)}`;
+		return `Format for the "Today's date" block — tokens like YYYY, MM, DD, HH, mm (literal text in [brackets]). Currently: ${formatDate(new Date(), format)}`;
 	}
 }
