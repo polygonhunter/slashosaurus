@@ -1,49 +1,19 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Slashosaurus">
-  <defs>
-    <linearGradient id="sl-tile" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffc247"/>
-      <stop offset="1" stop-color="#e8890c"/>
-    </linearGradient>
-    <linearGradient id="sl-sheen" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
-      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-
-  <rect x="16" y="16" width="480" height="480" rx="118" fill="url(#sl-tile)"/>
-  <rect x="16" y="16" width="480" height="480" rx="118" fill="url(#sl-sheen)"/>
-
-  <ellipse cx="226" cy="408" rx="132" ry="18" fill="#000000" opacity="0.13"/>
-
-  <!-- minimal geometric raptor (white), looking up at the slash -->
-  <g fill="#ffffff">
-    <!-- tail -->
-    <path d="M136 332 L74 308 L100 350 Z"/>
-    <!-- body capsule -->
-    <rect x="120" y="296" width="188" height="84" rx="42"/>
-    <!-- neck -->
-    <rect x="272" y="252" width="60" height="92" rx="30"/>
-    <!-- head, tilted up toward the slash -->
-    <g transform="rotate(-18 302 246)">
-      <rect x="264" y="216" width="104" height="56" rx="28"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <path d="M496,134L496,378C496,443.126 443.126,496 378,496L134,496C68.874,496 16,443.126 16,378L16,134C16,68.874 68.874,16 134,16L378,16C443.126,16 496,68.874 496,134Z" style="fill:url(#_Linear1);"/>
+    <path d="M496,134L496,378C496,443.126 443.126,496 378,496L134,496C68.874,496 16,443.126 16,378L16,134C16,68.874 68.874,16 134,16L378,16C443.126,16 496,68.874 496,134Z" style="fill:url(#_Linear2);"/>
+    <g transform="matrix(1.390152,0,0,1,-59.674242,0)">
+        <ellipse cx="226" cy="408" rx="132" ry="18" style="fill-opacity:0.13;"/>
     </g>
-    <!-- eye (tile color punch-out) -->
-    <circle cx="316" cy="234" r="9" fill="#e8890c"/>
-    <!-- legs -->
-    <rect x="158" y="364" width="38" height="56" rx="19"/>
-    <rect x="248" y="364" width="38" height="56" rx="19"/>
-    <!-- back bumps -->
-    <circle cx="182" cy="292" r="12"/>
-    <circle cx="222" cy="286" r="12"/>
-    <circle cx="262" cy="290" r="12"/>
-  </g>
-
-  <!-- the slash: a bold rounded "/" the raptor just drew -->
-  <rect x="368" y="96" width="52" height="232" rx="26" fill="#ffffff"
-        transform="rotate(24 394 212)"/>
-
-  <!-- spark left behind by the stroke -->
-  <g fill="#ffffff" opacity="0.9">
-    <path d="M348 108 L356 88 L364 108 L384 116 L364 124 L356 144 L348 124 L328 116 Z"/>
-  </g>
+    <g transform="matrix(1,0,0,1,-1,-32)">
+        <path d="M50,364C62.604,332.981 94.487,300.895 141,268C168.521,265.536 197.507,265.512 228,268C231.529,264.505 236.661,261.132 245,258C241.126,247.807 239.959,234.896 232,237C223.207,239.325 193.335,258.473 191,255C189.627,252.958 220.432,232.982 219,230C216.128,224.02 176.839,246.766 174,245C169.096,241.948 230.111,201.829 249,198C255.574,196.667 237,218 237,218L253,254L268,251C279.938,232.475 297.925,212.486 320,185C352.102,168.486 437.059,146.982 451,155C451,155 422.594,165.553 410.736,174.626C388.736,191.459 319,256 319,256C307.317,285.179 298.076,312.223 296,333C300.923,340.872 304.8,347.916 304,351C301.192,356.433 297.424,358.402 293,358C292.097,346.658 290.446,342.514 289,341C290.597,331.425 289.487,322.936 287,315C283.252,313.749 279.032,315.394 274,322C267.184,320.59 261.845,321.582 258,325C262.995,336.79 270.803,347.827 279,358C277.425,363.321 273.514,365.443 267,364C265.11,360.604 263.536,351.64 262,342L252.758,334.703C251.128,332.743 208.643,308.108 193,311C158.271,317.421 63.112,343.571 50,364Z" style="fill:white;"/>
+    </g>
+    <g transform="matrix(0.333333,0,0,0.333333,119.666667,106)">
+        <circle cx="316" cy="234" r="9" style="fill:rgb(232,137,12);"/>
+    </g>
+    <defs>
+        <linearGradient id="_Linear1" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0,512,-512,0,0,0)"><stop offset="0" style="stop-color:rgb(255,194,71);stop-opacity:1"/><stop offset="1" style="stop-color:rgb(232,137,12);stop-opacity:1"/></linearGradient>
+        <linearGradient id="_Linear2" x1="0" y1="0" x2="1" y2="0" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0,512,-512,0,0,0)"><stop offset="0" style="stop-color:white;stop-opacity:0.22"/><stop offset="0.5" style="stop-color:white;stop-opacity:0"/><stop offset="1" style="stop-color:white;stop-opacity:0"/></linearGradient>
+    </defs>
 </svg>
