@@ -1,6 +1,5 @@
 import {
 	EditorSuggest,
-	moment,
 	prepareFuzzySearch,
 	type App,
 	type Editor,
@@ -10,6 +9,7 @@ import {
 	type TFile,
 } from "obsidian";
 import { CATALOG, LANGUAGES } from "../core/catalog";
+import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
 import { buildInsertion } from "../core/insert";
 import { rankBlocks, type FuzzyFactory } from "../core/rank";
@@ -252,7 +252,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	): void {
 		const env: TemplateEnv = {
 			selection: this.pendingSelection,
-			date: moment().format(this.host.settings.dateFormat),
+			date: formatDate(new Date(), this.host.settings.dateFormat),
 			folded: opts.folded,
 			language: opts.language,
 		};
