@@ -1,0 +1,355 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Slashosaurus — floating glass panel with live block previews.
+   Everything is scoped to .slashosaurus-popover, a class the plugin adds to
+   Obsidian's own .suggestion-container, so other suggests stay untouched.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Container: glass panel ─────────────────────────────────────────── */
+
+.suggestion-container.slashosaurus-popover {
+	width: min(360px, calc(100vw - 2rem));
+	border-radius: var(--radius-l);
+	background-color: color-mix(in srgb, var(--background-primary) 78%, transparent);
+	-webkit-backdrop-filter: blur(24px) saturate(1.6);
+	backdrop-filter: blur(24px) saturate(1.6);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+	box-shadow:
+		0 16px 48px rgb(0 0 0 / 0.32),
+		0 2px 8px rgb(0 0 0 / 0.16),
+		inset 0 1px 0 rgb(255 255 255 / 0.08);
+	overflow: hidden;
+	transform-origin: top center;
+	animation: slashosaurus-pop 150ms cubic-bezier(0.2, 1.2, 0.3, 1);
+}
+
+@keyframes slashosaurus-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.96) translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+/* ── Scrolling list: ~5 rows visible ────────────────────────────────── */
+
+.slashosaurus-popover .suggestion {
+	position: relative;
+	max-height: 232px;
+	overflow-y: auto;
+	padding: var(--size-4-2);
+}
+
+.slashosaurus-popover .suggestion-item {
+	position: relative;
+	z-index: 1;
+	padding: 0;
+	background: transparent;
+	border-radius: var(--radius-m);
+}
+
+/* The pill replaces the theme's hard highlight. */
+.slashosaurus-popover .suggestion-item.is-selected {
+	background: transparent;
+}
+
+/* ── Item anatomy ───────────────────────────────────────────────────── */
+
+.slashosaurus-group {
+	padding: var(--size-4-2) var(--size-4-2) var(--size-2-1);
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-medium);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-faint);
+}
+
+.slashosaurus-row {
+	display: flex;
+	align-items: center;
+	gap: var(--size-4-3);
+	padding: var(--size-2-2) var(--size-4-2);
+	min-height: 40px;
+}
+
+.slashosaurus-label {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.slashosaurus-name {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-medium);
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.slashosaurus-alias {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* ── Preview tiles ──────────────────────────────────────────────────── */
+
+.slashosaurus-tile {
+	flex: 0 0 64px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--size-2-1);
+	border-radius: var(--radius-s);
+	background-color: var(--background-secondary);
+	color: var(--text-muted);
+	overflow: hidden;
+}
+
+/* Callouts — the reason this plugin exists. Each type pulls the theme's own
+   RGB triple; the fallback is Obsidian's default palette. Variable names are
+   not 1:1 with type names (note→default, tip→important, danger→error …). */
+
+.slashosaurus-tile.mod-callout {
+	background-color: rgba(var(--slashosaurus-accent), 0.14);
+}
+
+.slashosaurus-tile.mod-callout .slashosaurus-tile-icon,
+.slashosaurus-tile.mod-callout .slashosaurus-tile-callout-name {
+	color: rgb(var(--slashosaurus-accent));
+}
+
+.mod-callout-note     { --slashosaurus-accent: var(--callout-default, 68, 138, 255); }
+.mod-callout-abstract { --slashosaurus-accent: var(--callout-summary, 0, 191, 188); }
+.mod-callout-info     { --slashosaurus-accent: var(--callout-info, 0, 184, 212); }
+.mod-callout-todo     { --slashosaurus-accent: var(--callout-todo, 0, 184, 212); }
+.mod-callout-tip      { --slashosaurus-accent: var(--callout-important, 0, 191, 188); }
+.mod-callout-success  { --slashosaurus-accent: var(--callout-success, 68, 207, 110); }
+.mod-callout-question { --slashosaurus-accent: var(--callout-question, 236, 117, 0); }
+.mod-callout-warning  { --slashosaurus-accent: var(--callout-warning, 236, 117, 0); }
+.mod-callout-failure  { --slashosaurus-accent: var(--callout-fail, 233, 49, 71); }
+.mod-callout-danger   { --slashosaurus-accent: var(--callout-error, 233, 49, 71); }
+.mod-callout-bug      { --slashosaurus-accent: var(--callout-bug, 233, 49, 71); }
+.mod-callout-example  { --slashosaurus-accent: var(--callout-example, 120, 82, 238); }
+.mod-callout-quote    { --slashosaurus-accent: var(--callout-quote, 158, 158, 158); }
+
+.slashosaurus-tile-icon {
+	display: flex;
+	align-items: center;
+}
+
+.slashosaurus-tile-icon svg {
+	width: 12px;
+	height: 12px;
+}
+
+.slashosaurus-tile-callout-name {
+	font-size: 9px;
+	font-weight: var(--font-semibold);
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+}
+
+/* Headings in their real (scaled) sizes and weights. */
+
+.slashosaurus-tile.mod-heading {
+	color: var(--text-normal);
+}
+
+.slashosaurus-tile.mod-h1 span {
+	font-size: calc(var(--h1-size, 2em) * 0.5);
+	font-weight: var(--h1-weight, 700);
+}
+
+.slashosaurus-tile.mod-h2 span {
+	font-size: calc(var(--h2-size, 1.6em) * 0.5);
+	font-weight: var(--h2-weight, 600);
+}
+
+.slashosaurus-tile.mod-h3 span {
+	font-size: calc(var(--h3-size, 1.37em) * 0.5);
+	font-weight: var(--h3-weight, 600);
+}
+
+/* Quote */
+
+.slashosaurus-tile.mod-quote {
+	justify-content: flex-start;
+	padding-left: var(--size-4-2);
+}
+
+.slashosaurus-tile.mod-quote span {
+	font-style: italic;
+	border-left: 2px solid var(--blockquote-border-color, var(--interactive-accent));
+	padding-left: var(--size-2-2);
+}
+
+/* Code / math / mermaid */
+
+.slashosaurus-tile.mod-code {
+	background-color: var(--code-background, var(--background-secondary));
+}
+
+.slashosaurus-tile-mono {
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+}
+
+/* Lists: two miniature rows with real markers */
+
+.slashosaurus-tile.mod-list {
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: center;
+	gap: 3px;
+	padding: 0 var(--size-4-2);
+}
+
+.slashosaurus-tile-line {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.slashosaurus-tile-marker {
+	font-size: 8px;
+	line-height: 1;
+	color: var(--text-muted);
+}
+
+.slashosaurus-tile-checkbox {
+	width: 6px;
+	height: 6px;
+	border: 1px solid var(--checkbox-border-color, var(--text-muted));
+	border-radius: 2px;
+}
+
+.slashosaurus-tile-bar {
+	flex: 1;
+	height: 2px;
+	border-radius: 1px;
+	background-color: var(--text-faint);
+	opacity: 0.5;
+}
+
+/* Table: 2×2 mini grid */
+
+.slashosaurus-tile-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1px;
+	width: 32px;
+	height: 16px;
+	background-color: var(--table-border-color, var(--background-modifier-border));
+	border: 1px solid var(--table-border-color, var(--background-modifier-border));
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.slashosaurus-tile-grid div {
+	background-color: var(--background-primary);
+}
+
+/* Divider */
+
+.slashosaurus-tile-hr {
+	width: 60%;
+	height: var(--hr-thickness, 2px);
+	border-radius: 1px;
+	background-color: var(--hr-color, var(--background-modifier-border));
+}
+
+/* Icon tiles (link, embed, comment, date, footnote, snippets) */
+
+.slashosaurus-tile.mod-icon .slashosaurus-tile-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* ── Gliding selection pill ─────────────────────────────────────────── */
+
+.slashosaurus-pill {
+	position: absolute;
+	top: 0;
+	left: var(--size-4-2);
+	right: var(--size-4-2);
+	z-index: 0;
+	border-radius: var(--radius-m);
+	background-color: var(--background-modifier-hover);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		transform 180ms cubic-bezier(0.3, 1, 0.4, 1),
+		height 180ms cubic-bezier(0.3, 1, 0.4, 1),
+		opacity 120ms ease;
+}
+
+.slashosaurus-pill.is-teleporting {
+	transition: none;
+}
+
+/* Fallback when the pill couldn't mount. */
+.slashosaurus-popover.slashosaurus-no-pill .suggestion-item.is-selected {
+	background: var(--background-modifier-hover);
+}
+
+/* ── Instructions footer ────────────────────────────────────────────── */
+
+.slashosaurus-popover .prompt-instructions {
+	padding: var(--size-2-2) var(--size-4-3);
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	border-top: 1px solid color-mix(in srgb, var(--background-modifier-border) 55%, transparent);
+}
+
+/* ── Mobile: respect the native docked suggest ──────────────────────── */
+
+body.is-phone .suggestion-container.slashosaurus-popover {
+	width: auto;
+	border-radius: 0;
+	background-color: var(--background-primary);
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	border: none;
+	box-shadow: none;
+	animation: none;
+}
+
+body.is-phone .slashosaurus-pill {
+	display: none;
+}
+
+body.is-phone .slashosaurus-popover .suggestion-item.is-selected {
+	background: var(--background-modifier-hover);
+}
+
+body.is-mobile .slashosaurus-row {
+	min-height: 44px;
+	padding: var(--size-4-2) var(--size-4-3);
+}
+
+body.is-mobile .slashosaurus-popover .prompt-instructions {
+	display: none;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+	.suggestion-container.slashosaurus-popover {
+		animation: none;
+	}
+
+	.slashosaurus-pill {
+		display: none;
+	}
+
+	.slashosaurus-popover .suggestion-item.is-selected {
+		background: var(--background-modifier-hover);
+	}
+}

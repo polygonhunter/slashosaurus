@@ -1,0 +1,9 @@
+{
+	"id": "slashosaurus",
+	"name": "Slashosaurus",
+	"version": "0.1.0",
+	"minAppVersion": "1.12.4",
+	"description": "A slash menu that shows you what you get — type / and pick blocks, headings, and callouts from live, colored previews instead of memorizing syntax.",
+	"author": "polygonhunter",
+	"isDesktopOnly": false
+}
