@@ -44,7 +44,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 
 ## The catalog
 
-Headings 1–3 · bulleted, numbered and to-do lists · quote · divider · **all 13 callout types** (note, abstract, info, todo, tip, success, question, warning, failure, danger, bug, example, quote — each also foldable) · code block with language picker · table · math block · Mermaid diagram · comment · internal link · embed · today's date · footnote (marker at the cursor, definition appended at the end) · plus every snippet you define.
+Headings 1–3 · bulleted, numbered and to-do lists · quote · divider · **all 13 callout types** (note, abstract, info, todo, tip, success, question, warning, failure, danger, bug, example, quote — each also foldable) · code block with language picker · table · math block · Mermaid diagram · comment · internal link · embed · today's date · footnote (marker at the cursor, definition appended at the end) · plus every snippet you define — and, with the Daily Bible Verse plugin enabled, its verse commands (see [Integrations](#integrations)).
 
 ## Setup
 
@@ -52,6 +52,10 @@ Install, enable, type `/`. Two things worth knowing:
 
 - **Obsidian's core "Slash commands" plugin** also opens a menu on `/`. Disable it under *Settings → Core plugins* — or give Slashosaurus a different trigger character in its settings; both menus side by side is chaos nobody needs.
 - The trigger only fires at the start of a line or after a space, so URLs and file paths never open the menu.
+
+## Integrations
+
+- **[Daily Bible Verse](https://github.com/polygonhunter/daily-bible-verse)** — if the community plugin `daily-bible-verse` is installed and enabled, a *Daily Bible Verse* group appears at the bottom of the menu: **Bibelvers des Tages** (📖) inserts today's verse as a callout at the cursor, **Vers neu würfeln** (🎲) rerolls it. Both entries just run that plugin's own commands — Slashosaurus inserts nothing itself. Disable the plugin and the group vanishes without a trace.
 
 ## Privacy
 

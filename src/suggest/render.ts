@@ -38,11 +38,17 @@ function renderTile(row: HTMLElement, spec: TileSpec): void {
 	switch (spec.kind) {
 		case "callout": {
 			tile.addClasses(["mod-callout", `mod-callout-${spec.calloutType}`]);
-			const iconEl = tile.createDiv({ cls: "slashosaurus-tile-icon" });
-			setIcon(iconEl, calloutIcon(spec.calloutType));
+			if (spec.emoji) {
+				tile.createSpan({ cls: "slashosaurus-tile-emoji", text: spec.emoji });
+			} else {
+				const iconEl = tile.createDiv({ cls: "slashosaurus-tile-icon" });
+				setIcon(iconEl, calloutIcon(spec.calloutType));
+			}
 			tile.createSpan({
 				cls: "slashosaurus-tile-callout-name",
-				text: spec.calloutType.charAt(0).toUpperCase() + spec.calloutType.slice(1),
+				text:
+					spec.label ??
+					spec.calloutType.charAt(0).toUpperCase() + spec.calloutType.slice(1),
 			});
 			break;
 		}
@@ -82,6 +88,10 @@ function renderTile(row: HTMLElement, spec: TileSpec): void {
 		case "divider":
 			tile.addClass("mod-divider");
 			tile.createDiv({ cls: "slashosaurus-tile-hr" });
+			break;
+		case "emoji":
+			tile.addClass("mod-icon");
+			tile.createSpan({ cls: "slashosaurus-tile-emoji", text: spec.char });
 			break;
 		case "icon": {
 			tile.addClass("mod-icon");

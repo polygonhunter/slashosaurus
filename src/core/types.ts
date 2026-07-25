@@ -3,15 +3,16 @@
  * core/) must not import from "obsidian" so it stays unit-testable.
  */
 
-export type GroupId = "text" | "callout" | "insert" | "snippet";
+export type GroupId = "text" | "callout" | "insert" | "snippet" | "bible";
 
-export const GROUP_ORDER: readonly GroupId[] = ["text", "callout", "insert", "snippet"];
+export const GROUP_ORDER: readonly GroupId[] = ["text", "callout", "insert", "snippet", "bible"];
 
 export const GROUP_LABELS: Record<GroupId, string> = {
 	text: "Text",
 	callout: "Callouts",
 	insert: "Insert",
 	snippet: "Snippets",
+	bible: "Daily Bible Verse",
 };
 
 /** How a text selection is embedded when a block is chosen while text was selected. */
@@ -23,13 +24,14 @@ export type WrapKind =
 
 /** What the preview tile on the left of a menu row shows. */
 export type TileSpec =
-	| { kind: "callout"; calloutType: string }
+	| { kind: "callout"; calloutType: string; emoji?: string; label?: string }
 	| { kind: "heading"; level: 1 | 2 | 3 }
 	| { kind: "quote" }
 	| { kind: "mono"; sample: string }
 	| { kind: "list"; marker: "bullet" | "number" | "check" }
 	| { kind: "table" }
 	| { kind: "divider" }
+	| { kind: "emoji"; char: string }
 	| { kind: "icon"; icon: string };
 
 export interface BlockDef {
@@ -42,8 +44,10 @@ export interface BlockDef {
 	wrap: WrapKind;
 	linePrefix?: string; // only for wrap === "prefixLines"
 	tile: TileSpec;
-	special?: "codeblock" | "footnote" | "date";
+	special?: "codeblock" | "footnote" | "date" | "command";
 	foldable?: boolean; // callouts: Shift+Enter inserts the collapsed variant
+	commandId?: string; // only for special === "command": the command to execute on select
+	requiresPlugin?: string; // hidden unless this community plugin is installed and enabled
 }
 
 /** Result of scanning the text left of the cursor for the trigger. */

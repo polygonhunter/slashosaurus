@@ -8,6 +8,7 @@ import {
 	type EditorSuggestTriggerInfo,
 	type TFile,
 } from "obsidian";
+import { filterAvailable } from "../core/availability";
 import { CATALOG, LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
@@ -26,6 +27,13 @@ export type SuggestItem =
 	| { kind: "lang"; value: string };
 
 const fuzzyFactory: FuzzyFactory = (query) => prepareFuzzySearch(query);
+
+/** Non-public App surface used for plugin-gated command entries. Not in the
+ *  official typings — keep every access defensive. */
+interface ObsidianInternals {
+	plugins?: { enabledPlugins?: Set<string> };
+	commands?: { executeCommandById(id: string): boolean };
+}
 
 export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	private readonly pill = new SelectionPill();
@@ -149,7 +157,11 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			return languages.map((value) => ({ kind: "lang" as const, value }));
 		}
 
-		const defs = [...CATALOG, ...snippetsToBlockDefs(this.host.settings.snippets)];
+		const internals = this.app as App & ObsidianInternals;
+		const defs = filterAvailable(
+			[...CATALOG, ...snippetsToBlockDefs(this.host.settings.snippets)],
+			{ isPluginEnabled: (id) => internals.plugins?.enabledPlugins?.has(id) ?? false },
+		);
 		const ranked = rankBlocks(defs, context.query, fuzzyFactory);
 		if (context.query.length > 0) {
 			return ranked.map((def) => ({ kind: "block" as const, def }));
@@ -211,6 +223,17 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		}
 		if (item.def.special === "footnote") {
 			this.insertFootnote(context);
+			return;
+		}
+		if (item.def.special === "command") {
+			// Clears the typed "/query" (re-emitting any stashed selection) and
+			// parks the cursor; the foreign plugin then writes at it.
+			this.insertBlock(context, item.def, { folded: false, language: null });
+			if (item.def.commandId) {
+				(this.app as App & ObsidianInternals).commands?.executeCommandById(
+					item.def.commandId,
+				);
+			}
 			return;
 		}
 		this.insertBlock(context, item.def, {

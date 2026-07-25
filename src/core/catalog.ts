@@ -178,6 +178,32 @@ export const CATALOG: readonly BlockDef[] = [
 		tile: { kind: "icon", icon: "lucide-superscript" },
 		special: "footnote",
 	},
+
+	// ── Daily Bible Verse (hidden unless that plugin is enabled) ────────
+	{
+		id: "bible-verse",
+		name: "Bibelvers des Tages",
+		aliases: ["bible", "verse", "bibel"],
+		group: "bible",
+		template: "{cursor}",
+		wrap: "none",
+		tile: { kind: "callout", calloutType: "bible", emoji: "📖", label: "Johannes 3,16 …" },
+		special: "command",
+		commandId: "daily-bible-verse:insert-todays-verse",
+		requiresPlugin: "daily-bible-verse",
+	},
+	{
+		id: "bible-verse-reroll",
+		name: "Vers neu würfeln",
+		aliases: ["reroll", "würfeln", "bibel"],
+		group: "bible",
+		template: "{cursor}",
+		wrap: "none",
+		tile: { kind: "emoji", char: "🎲" },
+		special: "command",
+		commandId: "daily-bible-verse:reroll-todays-verse",
+		requiresPlugin: "daily-bible-verse",
+	},
 ];
 
 /** Fenced-code languages offered by the second stage of the code block picker. */

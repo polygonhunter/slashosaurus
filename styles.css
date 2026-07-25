@@ -138,6 +138,8 @@
 .mod-callout-bug      { --slashosaurus-accent: var(--callout-bug, 233, 49, 71); }
 .mod-callout-example  { --slashosaurus-accent: var(--callout-example, 120, 82, 238); }
 .mod-callout-quote    { --slashosaurus-accent: var(--callout-quote, 158, 158, 158); }
+/* Synthetic type for the Daily Bible Verse preview tile. */
+.mod-callout-bible    { --slashosaurus-accent: var(--callout-quote, 168, 130, 87); }
 
 .slashosaurus-tile-icon {
 	display: flex;
@@ -154,6 +156,13 @@
 	font-weight: var(--font-semibold);
 	letter-spacing: 0.02em;
 	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.slashosaurus-tile-emoji {
+	font-size: 0.9em;
+	line-height: 1;
 }
 
 /* Headings in their real (scaled) sizes and weights. */
