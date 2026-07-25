@@ -1,6 +1,6 @@
 {
 	"name": "slashosaurus",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "A slash menu that shows you what you get — live, colored block previews right in the editor.",
 	"main": "main.js",
 	"type": "module",
