@@ -63,6 +63,13 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		this.host.onSettingsChanged();
 	}
 
+	/** Re-render/re-index the declarative tab. Only ever invoked from the
+	 *  declarative callbacks (1.13+), but guarded structurally so it is a
+	 *  no-op instead of a TypeError on apps without update(). */
+	private refreshDefinitions(): void {
+		(this as { update?: () => void }).update?.();
+	}
+
 	// ── Declarative path (1.13+) ────────────────────────────────────────
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
@@ -105,18 +112,18 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					name: "Add snippet",
 					action: () => {
 						settings.snippets.push({ name: "", template: "" });
-						this.update();
+						this.refreshDefinitions();
 					},
 				},
 				onDelete: (index: number) => {
 					settings.snippets.splice(index, 1);
-					void this.persist().then(() => this.update());
+					void this.persist().then(() => this.refreshDefinitions());
 				},
 				onReorder: (oldIndex: number, newIndex: number) => {
 					const [moved] = settings.snippets.splice(oldIndex, 1);
 					if (moved === undefined) return;
 					settings.snippets.splice(newIndex, 0, moved);
-					void this.persist().then(() => this.update());
+					void this.persist().then(() => this.refreshDefinitions());
 				},
 			},
 		];
@@ -140,7 +147,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		}
 		await this.persist();
 		// Refresh the live "Currently: …" preview in the date format desc.
-		if (key === "dateFormat") this.update();
+		if (key === "dateFormat") this.refreshDefinitions();
 	}
 
 	/** Name + template controls for one snippet row — shared by both paths. */
@@ -170,6 +177,10 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	// returns a non-empty array. ─────────────────────────────────────────
 
 	display(): void {
+		this.renderLegacy();
+	}
+
+	private renderLegacy(): void {
 		const { containerEl } = this;
 		containerEl.empty();
 		const settings = this.host.settings;
@@ -201,7 +212,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.onChange(async (value) => {
 						settings.dateFormat = value.trim() || DEFAULT_SETTINGS.dateFormat;
 						await this.persist();
-						this.display();
+						this.renderLegacy();
 					}),
 			);
 
@@ -221,7 +232,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.onClick(async () => {
 						settings.snippets.splice(index, 1);
 						await this.persist();
-						this.display();
+						this.renderLegacy();
 					}),
 			);
 		});
@@ -229,7 +240,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		new Setting(containerEl).addButton((button) =>
 			button.setButtonText("Add snippet").onClick(() => {
 				settings.snippets.push({ name: "", template: "" });
-				this.display();
+				this.renderLegacy();
 			}),
 		);
 	}
