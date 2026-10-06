@@ -7,6 +7,8 @@ import type { BlockDef, TemplateEnv } from "../src/core/types";
 const env = (selection: string): TemplateEnv => ({
 	selection,
 	date: "2026-07-17",
+	time: "09:30",
+	title: "My Note",
 	folded: false,
 	language: null,
 });

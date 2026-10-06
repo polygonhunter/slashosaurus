@@ -29,7 +29,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 - **Wraps your selection** — select a paragraph, type `/`, pick *Quote* or a callout: the text is wrapped, not replaced. Multi-line selections get proper prefixes, code selections land inside the fence.
 - **Smart insert** — the typed `/query` vanishes without a trace and the cursor lands where writing continues: inside the callout body, in the first table cell, on the empty line of the code block.
 - **Two-stage code block** — choose *Code block*, then pick from ~50 languages in the same popup (including `dataview`, `dataviewjs`, `tasks`, `query`, `base`). *No language* gives a plain fence, and any language that isn't listed can simply be typed and used as-is.
-- **Your own snippets** — add blocks in the settings (name + template, `{cursor}` marks the writing position) and they join the menu as their own group.
+- **Your own snippets** — add blocks in the settings (name + template, `{cursor}` marks the writing position; `{selection}`, `{date}`, `{time}` and `{title}` are filled in) and they join the menu as their own group.
 - **Recent first** — the last five blocks you inserted lead the menu as a *Recent* group when you type just `/`; while filtering they win ties.
 - **Radically clean** — a floating glass panel with a gliding selection pill. It appears, delivers, disappears. No toolbar, no chrome.
 
@@ -45,7 +45,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 
 ## The catalog
 
-Headings 1–3 · bulleted, numbered and to-do lists · quote · divider · **all 13 callout types** (note, abstract, info, todo, tip, success, question, warning, failure, danger, bug, example, quote — each also foldable) · code block with language picker · table · math block · Mermaid diagram · comment · internal link · embed · today's date · footnote (marker at the cursor, definition appended at the end) · plus every snippet you define — and, with the Daily Bible Verse plugin enabled, its verse commands (see [Integrations](#integrations)).
+Headings 1–6 · bulleted, numbered and to-do lists · quote · divider · **all 13 callout types** (note, abstract, info, todo, tip, success, question, warning, failure, danger, bug, example, quote — each also foldable) · code block with language picker · table · math block · Mermaid diagram · comment · internal link · embed · today's date · current time · footnote (marker at the cursor, definition appended at the end) · plus every snippet you define — and, with the Daily Bible Verse plugin enabled, its verse commands (see [Integrations](#integrations)).
 
 ## Setup
 

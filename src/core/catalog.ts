@@ -1,12 +1,12 @@
 import { CALLOUTS } from "./callouts";
-import type { BlockDef } from "./types";
+import type { BlockDef, HeadingLevel } from "./types";
 
 /**
  * The built-in block catalog. Order matters: it is the display order within
  * each group when the query is empty.
  */
 
-function heading(level: 1 | 2 | 3): BlockDef {
+function heading(level: HeadingLevel): BlockDef {
 	const hashes = "#".repeat(level);
 	return {
 		id: `h${level}`,
@@ -40,6 +40,9 @@ export const CATALOG: readonly BlockDef[] = [
 	heading(1),
 	heading(2),
 	heading(3),
+	heading(4),
+	heading(5),
+	heading(6),
 	{
 		id: "bullet-list",
 		name: "Bulleted list",
@@ -167,6 +170,15 @@ export const CATALOG: readonly BlockDef[] = [
 		wrap: "none",
 		tile: { kind: "icon", icon: "lucide-calendar" },
 		special: "date",
+	},
+	{
+		id: "time",
+		name: "Current time",
+		aliases: ["time", "now", "clock"],
+		group: "insert",
+		template: "{time}{cursor}",
+		wrap: "none",
+		tile: { kind: "icon", icon: "lucide-clock" },
 	},
 	{
 		id: "footnote",

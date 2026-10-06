@@ -3,8 +3,9 @@
  * re-export from the obsidian package, which is untyped in the review
  * linter's environment and only powers the "Today's date" block anyway.
  *
- * Supported tokens: YYYY YY MMMM MMM MM M DD D dddd ddd HH H hh h mm m ss s
- * A a — literal text goes in [brackets].
+ * Supported tokens: YYYY YY Q MMMM MMM MM M WW W Do DD D dddd ddd HH H hh h
+ * mm m ss s A a — literal text goes in [brackets]. W/WW are ISO weeks, Do an
+ * English ordinal (1st, 2nd …), Q the quarter.
  */
 
 const MONTHS = [
@@ -24,9 +25,27 @@ const MONTHS = [
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-const TOKEN_RE = /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|dddd|ddd|DD|D|HH|H|hh|h|mm|m|ss|s|A|a/g;
+const TOKEN_RE =
+	/\[([^\]]*)\]|YYYY|YY|Q|MMMM|MMM|MM|M|WW|W|dddd|ddd|Do|DD|D|HH|H|hh|h|mm|m|ss|s|A|a/g;
 
 const pad = (n: number): string => String(n).padStart(2, "0");
+
+/** 1 → "1st", 2 → "2nd", 11 → "11th", 23 → "23rd". */
+function ordinal(n: number): string {
+	const tens = n % 100;
+	if (tens >= 11 && tens <= 13) return `${n}th`;
+	const suffix = ["th", "st", "nd", "rd"][n % 10] ?? "th";
+	return `${n}${suffix}`;
+}
+
+/** ISO 8601 week number (weeks start Monday, week 1 holds the first Thursday). */
+function isoWeek(date: Date): number {
+	const day = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const weekday = day.getUTCDay() || 7;
+	day.setUTCDate(day.getUTCDate() + 4 - weekday); // Thursday of this week
+	const yearStart = Date.UTC(day.getUTCFullYear(), 0, 1);
+	return Math.ceil(((day.getTime() - yearStart) / 86_400_000 + 1) / 7);
+}
 
 export function formatDate(date: Date, format: string): string {
 	return format.replace(TOKEN_RE, (token, literal: string | undefined) => {
@@ -38,6 +57,14 @@ export function formatDate(date: Date, format: string): string {
 				return String(date.getFullYear());
 			case "YY":
 				return pad(date.getFullYear() % 100);
+			case "Q":
+				return String(Math.floor(date.getMonth() / 3) + 1);
+			case "WW":
+				return pad(isoWeek(date));
+			case "W":
+				return String(isoWeek(date));
+			case "Do":
+				return ordinal(date.getDate());
 			case "MMMM":
 				return MONTHS[date.getMonth()] ?? "";
 			case "MMM":

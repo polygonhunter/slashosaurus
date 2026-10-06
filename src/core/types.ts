@@ -42,10 +42,12 @@ export type WrapKind =
 	| "fenced" // selection goes between the fences, cursor after the block
 	| "none"; // selection is re-emitted verbatim before the block — never lost
 
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
 /** What the preview tile on the left of a menu row shows. */
 export type TileSpec =
 	| { kind: "callout"; calloutType: string; emoji?: string; label?: string }
-	| { kind: "heading"; level: 1 | 2 | 3 }
+	| { kind: "heading"; level: HeadingLevel }
 	| { kind: "quote" }
 	| { kind: "mono"; sample: string }
 	| { kind: "list"; marker: "bullet" | "number" | "check" }
@@ -60,7 +62,7 @@ export interface BlockDef {
 	/** Extra match terms besides the name; shown as hint and fed to the fuzzy filter. */
 	aliases: string[];
 	group: GroupId;
-	template: string; // may contain {cursor}, {date}, {fold}, {lang}
+	template: string; // may contain {cursor}, {selection}, {date}, {time}, {title}, {fold}, {lang}
 	wrap: WrapKind;
 	linePrefix?: string; // only for wrap === "prefixLines"
 	tile: TileSpec;
@@ -82,6 +84,10 @@ export interface TriggerHit {
 export interface TemplateEnv {
 	selection: string | null;
 	date: string;
+	/** Current time, HH:mm. */
+	time: string;
+	/** Basename of the note being edited ("" if unknown). */
+	title: string;
 	folded: boolean;
 	language: string | null;
 }
@@ -99,5 +105,7 @@ export interface InsertPlan {
 
 export interface UserSnippet {
 	name: string;
-	template: string; // {cursor} marks the writing position
+	/** {cursor} marks the writing position; {selection}, {date}, {time} and
+	 *  {title} are filled in on insert. */
+	template: string;
 }

@@ -31,4 +31,19 @@ describe("formatDate", () => {
 	it("leaves plain non-token text alone", () => {
 		expect(formatDate(date, "YYYY/MM")).toBe("2020/01");
 	});
+
+	it("formats ordinals, quarters and ISO weeks", () => {
+		expect(formatDate(date, "Do MMMM")).toBe("1st January");
+		expect(formatDate(new Date(2020, 0, 2), "Do")).toBe("2nd");
+		expect(formatDate(new Date(2020, 0, 3), "Do")).toBe("3rd");
+		expect(formatDate(new Date(2020, 0, 11), "Do")).toBe("11th");
+		expect(formatDate(new Date(2020, 0, 22), "Do")).toBe("22nd");
+		expect(formatDate(date, "[Q]Q")).toBe("Q1");
+		expect(formatDate(new Date(2020, 11, 31), "Q")).toBe("4");
+		// 2020-01-01 is in ISO week 1; 2021-01-03 still belongs to 2020-W53.
+		expect(formatDate(date, "[W]WW")).toBe("W01");
+		expect(formatDate(new Date(2021, 0, 3), "W")).toBe("53");
+		expect(formatDate(new Date(2021, 0, 4), "W")).toBe("1");
+	});
 });
+

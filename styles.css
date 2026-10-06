@@ -187,6 +187,21 @@
 	font-weight: var(--h3-weight, 600);
 }
 
+.slashosaurus-tile.mod-h4 span {
+	font-size: calc(var(--h4-size, 1.25em) * 0.5);
+	font-weight: var(--h4-weight, 600);
+}
+
+.slashosaurus-tile.mod-h5 span {
+	font-size: calc(var(--h5-size, 1.12em) * 0.5);
+	font-weight: var(--h5-weight, 600);
+}
+
+.slashosaurus-tile.mod-h6 span {
+	font-size: calc(var(--h6-size, 1.12em) * 0.5);
+	font-weight: var(--h6-weight, 600);
+}
+
 /* Quote */
 
 .slashosaurus-tile.mod-quote {

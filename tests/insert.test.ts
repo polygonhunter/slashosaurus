@@ -6,6 +6,8 @@ import type { BlockDef, TemplateEnv } from "../src/core/types";
 const env = (overrides: Partial<TemplateEnv> = {}): TemplateEnv => ({
 	selection: null,
 	date: "2026-07-17",
+	time: "09:30",
+	title: "My Note",
 	folded: false,
 	language: null,
 	...overrides,
@@ -148,5 +150,53 @@ describe("fitToLine", () => {
 		const table = fit("table", "abc ", "");
 		expect(table.text.startsWith("\n\n| ")).toBe(true);
 		expect(table.cursor).toEqual({ lineDelta: 2, ch: 2 });
+	});
+});
+
+describe("snippet placeholders {time}, {title}, {selection}", () => {
+	const snippet = (template: string): BlockDef => ({
+		id: "snippet:x",
+		name: "X",
+		aliases: [],
+		group: "snippet",
+		template,
+		wrap: "inline",
+		tile: { kind: "icon", icon: "x" },
+	});
+
+	it("fills {time} and {title}", () => {
+		expect(buildInsertion(snippet("## {title} – {date} {time}"), env()).text).toBe(
+			"## My Note – 2026-07-17 09:30",
+		);
+	});
+
+	it("puts the selection where {selection} says, cursor stays at {cursor}", () => {
+		const plan = buildInsertion(
+			snippet("**{selection}** {cursor}({selection})"),
+			env({ selection: "hi" }),
+		);
+		expect(plan.text).toBe("**hi** (hi)");
+		expect(plan.cursor).toEqual({ lineDelta: 0, ch: 7 });
+	});
+
+	it("drops {selection} when nothing is selected", () => {
+		expect(buildInsertion(snippet("[{selection}]{cursor}"), env()).text).toBe("[]");
+	});
+
+	it("keeps placeholders inside the selected text literal", () => {
+		expect(
+			buildInsertion(snippet("> {selection}"), env({ selection: "{date} $&" })).text,
+		).toBe("> {date} $&");
+	});
+
+	it("inserts the current time with the Current time block", () => {
+		expect(buildInsertion(byId("time"), env()).text).toBe("09:30");
+	});
+
+	it("offers headings 4 to 6", () => {
+		expect(buildInsertion(byId("h4"), env()).text).toBe("#### ");
+		expect(buildInsertion(byId("h6"), env({ selection: "a\nb" })).text).toBe(
+			"###### a\n###### b",
+		);
 	});
 });

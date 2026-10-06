@@ -293,9 +293,12 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		def: BlockDef,
 		opts: { folded: boolean; language: string | null },
 	): void {
+		const now = new Date();
 		const env: TemplateEnv = {
 			selection: this.pendingSelection,
-			date: formatDate(new Date(), this.host.settings.dateFormat),
+			date: formatDate(now, this.host.settings.dateFormat),
+			time: formatDate(now, "HH:mm"),
+			title: context.file?.basename ?? "",
 			folded: opts.folded,
 			language: opts.language,
 		};

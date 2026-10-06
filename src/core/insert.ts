@@ -14,16 +14,25 @@ function markCursor(template: string): string {
 	return template.slice(0, idx) + CURSOR_MARK + rest;
 }
 
+const SELECTION = "{selection}";
+
 /**
  * Resolve a template into the final text plus the cursor position relative to
- * the insertion start. Placeholders: {lang}, {fold}, {date}, {cursor}.
+ * the insertion start. Placeholders: {lang}, {fold}, {date}, {time}, {title},
+ * {selection}, {cursor}. A template with {selection} decides itself where
+ * selected text goes; otherwise the def's wrap kind embeds it.
  */
 export function buildInsertion(def: BlockDef, env: TemplateEnv): InsertPlan {
 	let template = markCursor(def.template);
 	template = replaceAllLiteral(template, "{lang}", env.language ?? "");
 	template = replaceAllLiteral(template, "{fold}", env.folded ? "-" : "");
 	template = replaceAllLiteral(template, "{date}", env.date);
-	if (env.selection !== null && env.selection.length > 0) {
+	template = replaceAllLiteral(template, "{time}", env.time);
+	template = replaceAllLiteral(template, "{title}", env.title);
+	if (template.includes(SELECTION)) {
+		// Last, so placeholders inside the selected text stay literal.
+		template = replaceAllLiteral(template, SELECTION, env.selection ?? "");
+	} else if (env.selection !== null && env.selection.length > 0) {
 		template = embedSelection(
 			template,
 			env.selection,

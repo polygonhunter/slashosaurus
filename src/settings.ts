@@ -43,7 +43,7 @@ const TRIGGER = {
 };
 const DATE_FORMAT = { name: "Date format" };
 const SNIPPETS_INTRO =
-	"Your own blocks for the menu. Put {cursor} where writing should continue; without it the cursor lands at the end.";
+	"Your own blocks for the menu. Put {cursor} where writing should continue (without it the cursor lands at the end). Also filled in: {selection} (selected text), {date} (in the format above), {time} (HH:mm) and {title} (note name).";
 
 /**
  * Dual-path settings tab: on Obsidian 1.13+ the declarative definitions from
@@ -271,6 +271,6 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	}
 
 	private dateFormatDesc(format: string): string {
-		return `Format for the "Today's date" block — tokens like YYYY, MM, DD, HH, mm (literal text in [brackets]). Currently: ${formatDate(new Date(), format)}`;
+		return `Format for the "Today's date" block — tokens like YYYY, MM, DD, Do, ddd, W, HH, mm (literal text in [brackets]). Currently: ${formatDate(new Date(), format)}`;
 	}
 }
