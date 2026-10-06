@@ -286,8 +286,10 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			editor.getLine(context.start.line).slice(0, context.start.ch),
 			editor.getLine(context.end.line).slice(context.end.ch),
 		);
-		context.editor.replaceRange(plan.text, context.start, context.end);
-		context.editor.setCursor({
+		editor.transaction({ changes: [{ from: context.start, to: context.end, text: plan.text }] });
+		// The cursor is set separately: its position is in post-change
+		// coordinates, and a selection-only update adds no undo step.
+		editor.setCursor({
 			line: context.start.line + plan.cursor.lineDelta,
 			ch:
 				plan.cursor.lineDelta === 0
@@ -303,10 +305,21 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		// The typed "/query" is still in the document but can't contain "[^",
 		// so it never affects the numbering.
 		const plan = planFootnote(editor.getValue());
-		editor.replaceRange(plan.marker, context.start, context.end);
 		const lastLine = editor.lastLine();
 		const docEnd = { line: lastLine, ch: editor.getLine(lastLine).length };
-		editor.replaceRange(plan.appendText, docEnd);
+		const triggerAtDocEnd =
+			context.end.line === docEnd.line && context.end.ch === docEnd.ch;
+		// Marker and definition go in one transaction → one undo step. When
+		// the trigger itself ends the document, both edits touch the same
+		// position, so they are merged into a single change.
+		editor.transaction({
+			changes: triggerAtDocEnd
+				? [{ from: context.start, to: context.end, text: plan.marker + plan.appendText }]
+				: [
+						{ from: context.start, to: context.end, text: plan.marker },
+						{ from: docEnd, text: plan.appendText },
+					],
+		});
 		const newLastLine = editor.lastLine();
 		editor.setCursor({ line: newLastLine, ch: editor.getLine(newLastLine).length });
 	}
