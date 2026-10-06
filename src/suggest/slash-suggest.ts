@@ -307,6 +307,9 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		const plan = planFootnote(editor.getValue());
 		const lastLine = editor.lastLine();
 		const docEnd = { line: lastLine, ch: editor.getLine(lastLine).length };
+		// A selection the trigger replaced stays in front of the marker —
+		// "word" + /footnote → "word[^1]".
+		const markerText = (this.pendingSelection ?? "") + plan.marker;
 		const triggerAtDocEnd =
 			context.end.line === docEnd.line && context.end.ch === docEnd.ch;
 		// Marker and definition go in one transaction → one undo step. When
@@ -314,13 +317,15 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		// position, so they are merged into a single change.
 		editor.transaction({
 			changes: triggerAtDocEnd
-				? [{ from: context.start, to: context.end, text: plan.marker + plan.appendText }]
+				? [{ from: context.start, to: context.end, text: markerText + plan.appendText }]
 				: [
-						{ from: context.start, to: context.end, text: plan.marker },
+						{ from: context.start, to: context.end, text: markerText },
 						{ from: docEnd, text: plan.appendText },
 					],
 		});
 		const newLastLine = editor.lastLine();
 		editor.setCursor({ line: newLastLine, ch: editor.getLine(newLastLine).length });
+		this.pendingSelection = null;
+		this.pendingAt = -1;
 	}
 }
