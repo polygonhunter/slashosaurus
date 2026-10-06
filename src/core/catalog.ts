@@ -249,4 +249,16 @@ export const LANGUAGES: readonly string[] = [
 	"ini",
 	"diff",
 	"plaintext",
+	// Short forms people actually type.
+	"js",
+	"ts",
+	"jsx",
+	"tsx",
+	// Obsidian and plugin code block languages.
+	"mermaid",
+	"query",
+	"base",
+	"dataview",
+	"dataviewjs",
+	"tasks",
 ];

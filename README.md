@@ -28,7 +28,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 - **Live previews** — callouts appear as real colored mini-boxes (all 13 types, folded variants included), headings in their sizes, quotes as quotes, code in monospace. Your theme's colors, light and dark.
 - **Wraps your selection** — select a paragraph, type `/`, pick *Quote* or a callout: the text is wrapped, not replaced. Multi-line selections get proper prefixes, code selections land inside the fence.
 - **Smart insert** — the typed `/query` vanishes without a trace and the cursor lands where writing continues: inside the callout body, in the first table cell, on the empty line of the code block.
-- **Two-stage code block** — choose *Code block*, then pick from ~40 languages in the same popup. Esc inserts a plain fence.
+- **Two-stage code block** — choose *Code block*, then pick from ~50 languages in the same popup (including `dataview`, `dataviewjs`, `tasks`, `query`, `base`). *No language* gives a plain fence, and any language that isn't listed can simply be typed and used as-is.
 - **Your own snippets** — add blocks in the settings (name + template, `{cursor}` marks the writing position) and they join the menu as their own group.
 - **Radically clean** — a floating glass panel with a gliding selection pill. It appears, delivers, disappears. No toolbar, no chrome.
 
@@ -39,7 +39,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 | `↵` | Insert the block |
 | `⇧↵` | Insert a callout **folded** (`> [!note]-`) |
 | `↑` / `↓` | Move the selection pill |
-| `esc` | Dismiss (in the language picker: insert without a language) |
+| `esc` | Dismiss |
 | just type | Fuzzy-filter the list |
 
 ## The catalog

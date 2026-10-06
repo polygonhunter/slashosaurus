@@ -24,13 +24,25 @@ export function renderBlockItem(def: BlockDef, el: HTMLElement, groupLabel?: str
 }
 
 /** DOM for a language row in the code block's second stage. */
-export function renderLanguageItem(language: string, el: HTMLElement): void {
+export function renderLanguageItem(
+	language: string,
+	el: HTMLElement,
+	kind: "none" | "custom" | "known" = "known",
+): void {
 	el.addClass("slashosaurus-item");
 	const row = el.createDiv({ cls: "slashosaurus-row" });
 	const tile = row.createDiv({ cls: "slashosaurus-tile mod-code" });
 	tile.createSpan({ cls: "slashosaurus-tile-mono", text: "```" });
 	const label = row.createDiv({ cls: "slashosaurus-label" });
-	label.createDiv({ cls: "slashosaurus-name", text: language });
+	label.createDiv({
+		cls: "slashosaurus-name",
+		text: kind === "none" ? "No language" : language,
+	});
+	if (kind === "none") {
+		label.createDiv({ cls: "slashosaurus-alias", text: "plain code block" });
+	} else if (kind === "custom") {
+		label.createDiv({ cls: "slashosaurus-alias", text: "use as language" });
+	}
 }
 
 function renderTile(row: HTMLElement, spec: TileSpec): void {

@@ -55,3 +55,38 @@ export function rankStrings(
 	scored.sort((a, b) => b.score - a.score);
 	return scored.map((s) => s.item);
 }
+
+/** One row of the code block's language stage. */
+export interface LanguageOption {
+	/** What goes behind the opening fence; "" = no language. */
+	value: string;
+	/** "none": the explicit no-language row; "custom": the typed query
+	 *  itself, offered when it isn't in the list; "known": a list entry. */
+	kind: "none" | "custom" | "known";
+}
+
+/**
+ * Options for the language stage. There is always a way out: an empty query
+ * leads with "No language", and a query that isn't an exact list entry is
+ * offered verbatim first — so "/dataviewjs" or any other fence language
+ * never dead-ends in an empty list.
+ */
+export function languageOptions(
+	languages: readonly string[],
+	query: string,
+	fuzzy: FuzzyFactory,
+): LanguageOption[] {
+	if (query.length === 0) {
+		return [
+			{ value: "", kind: "none" },
+			...languages.map((value) => ({ value, kind: "known" as const })),
+		];
+	}
+	const known = rankStrings(languages, query, fuzzy).map((value) => ({
+		value,
+		kind: "known" as const,
+	}));
+	const lower = query.toLowerCase();
+	if (languages.some((lang) => lang.toLowerCase() === lower)) return known;
+	return [{ value: query, kind: "custom" }, ...known];
+}

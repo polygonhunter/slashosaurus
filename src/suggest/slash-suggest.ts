@@ -14,7 +14,12 @@ import { LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
 import { buildInsertion, fitToLine } from "../core/insert";
-import { rankBlocks, rankStrings, type FuzzyFactory } from "../core/rank";
+import {
+	languageOptions,
+	rankBlocks,
+	type FuzzyFactory,
+	type LanguageOption,
+} from "../core/rank";
 import { detectTrigger } from "../core/trigger";
 import { GROUP_LABELS, type BlockDef, type GroupId, type TemplateEnv } from "../core/types";
 import type { SettingsHost } from "../settings";
@@ -24,7 +29,7 @@ import type { SelectionStashTracker } from "./selection-stash";
 
 export type SuggestItem =
 	| { kind: "block"; def: BlockDef; groupLabel?: string }
-	| { kind: "lang"; value: string };
+	| { kind: "lang"; value: string; variant: LanguageOption["kind"] };
 
 const fuzzyFactory: FuzzyFactory = (query) => prepareFuzzySearch(query);
 
@@ -86,13 +91,6 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			return true;
 		});
 
-		// In language mode, Escape means "code block without a language" —
-		// otherwise the default (dismiss) stays in charge.
-		this.scope.register([], "Escape", () => {
-			if (this.mode !== "language") return true;
-			this.finishCodeBlock(null);
-			return false;
-		});
 	}
 
 	private showBlockInstructions(): void {
@@ -106,7 +104,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	private showLanguageInstructions(): void {
 		this.setInstructions([
 			{ command: "↵", purpose: "pick language" },
-			{ command: "esc", purpose: "no language" },
+			{ command: "esc", purpose: "dismiss" },
 		]);
 	}
 
@@ -155,8 +153,11 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	getSuggestions(context: EditorSuggestContext): SuggestItem[] {
 		this.rendered = [];
 		if (this.mode === "language") {
-			const languages = rankStrings(LANGUAGES, context.query, fuzzyFactory);
-			return languages.map((value) => ({ kind: "lang" as const, value }));
+			return languageOptions(LANGUAGES, context.query, fuzzyFactory).map((option) => ({
+				kind: "lang" as const,
+				value: option.value,
+				variant: option.kind,
+			}));
 		}
 
 		const internals = this.app as App & ObsidianInternals;
@@ -189,7 +190,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		if (item.kind === "block") {
 			renderBlockItem(item.def, el, item.groupLabel);
 		} else {
-			renderLanguageItem(item.value, el);
+			renderLanguageItem(item.value, el, item.variant);
 		}
 	}
 
@@ -222,7 +223,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 
 	selectSuggestion(item: SuggestItem, evt: MouseEvent | KeyboardEvent): void {
 		if (item.kind === "lang") {
-			this.finishCodeBlock(item.value);
+			this.finishCodeBlock(item.value === "" ? null : item.value);
 			return;
 		}
 		const context = this.context;

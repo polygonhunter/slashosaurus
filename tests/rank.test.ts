@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "../src/core/catalog";
-import { rankBlocks, rankStrings, type FuzzyFactory } from "../src/core/rank";
+import { languageOptions, rankBlocks, rankStrings, type FuzzyFactory } from "../src/core/rank";
 import { GROUP_ORDER } from "../src/core/types";
 
 /**
@@ -72,5 +72,31 @@ describe("rankStrings", () => {
 		};
 		rankStrings(["a", "b", "c", "d"], "a", counting);
 		expect(prepared).toBe(1);
+	});
+});
+
+describe("languageOptions", () => {
+	const LANGS = ["javascript", "typescript", "python"];
+	const values = (q: string) => languageOptions(LANGS, q, testFuzzy).map((o) => `${o.kind}:${o.value}`);
+
+	it("leads with 'No language' for an empty query", () => {
+		expect(values("")).toEqual([
+			"none:",
+			"known:javascript",
+			"known:typescript",
+			"known:python",
+		]);
+	});
+
+	it("offers the typed query first when it isn't an exact entry", () => {
+		expect(values("py")).toEqual(["custom:py", "known:python"]);
+	});
+
+	it("never dead-ends: an unknown language is still offered", () => {
+		expect(values("dataviewjs")).toEqual(["custom:dataviewjs"]);
+	});
+
+	it("does not duplicate an exact match (case-insensitive)", () => {
+		expect(values("Python")).toEqual(["known:python"]);
 	});
 });
