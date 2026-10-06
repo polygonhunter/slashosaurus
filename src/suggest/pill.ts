@@ -10,6 +10,8 @@ export class SelectionPill {
 	private pillEl: HTMLElement | null = null;
 	private listEl: HTMLElement | null = null;
 	private observer: MutationObserver | null = null;
+	/** Pending animation frame for a batched update(), or 0. */
+	private frame = 0;
 
 	/** Idempotent; call freely on every render pass. */
 	mount(containerEl: HTMLElement): void {
@@ -28,7 +30,11 @@ export class SelectionPill {
 		}
 		this.listEl = listEl;
 		this.pillEl = listEl.createDiv({ cls: "slashosaurus-pill is-teleporting" });
-		this.observer = new MutationObserver(() => this.update());
+		this.observer = new MutationObserver((records) => {
+			// The pill's own class flips (is-teleporting) are no news.
+			if (records.every((r) => r.target === this.pillEl)) return;
+			this.scheduleUpdate();
+		});
 		this.observer.observe(listEl, {
 			attributes: true,
 			attributeFilter: ["class"],
@@ -36,6 +42,16 @@ export class SelectionPill {
 			childList: true,
 		});
 		this.update();
+	}
+
+	/** Arrow keys and re-renders fire bursts of mutations; measure at most
+	 *  once per frame. */
+	private scheduleUpdate(): void {
+		if (this.frame !== 0) return;
+		this.frame = window.requestAnimationFrame(() => {
+			this.frame = 0;
+			this.update();
+		});
 	}
 
 	private update(): void {
@@ -68,6 +84,10 @@ export class SelectionPill {
 	}
 
 	destroy(): void {
+		if (this.frame !== 0) {
+			window.cancelAnimationFrame(this.frame);
+			this.frame = 0;
+		}
 		this.observer?.disconnect();
 		this.observer = null;
 		this.pillEl?.remove();
