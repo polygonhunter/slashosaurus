@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "../src/core/catalog";
-import { rankBlocks, type FuzzyFactory } from "../src/core/rank";
+import { rankBlocks, rankStrings, type FuzzyFactory } from "../src/core/rank";
 import { GROUP_ORDER } from "../src/core/types";
 
 /**
@@ -50,5 +50,27 @@ describe("rankBlocks", () => {
 	it("drops non-matching blocks entirely", () => {
 		const ranked = rankBlocks(CATALOG, "zzzz", testFuzzy);
 		expect(ranked).toHaveLength(0);
+	});
+});
+
+describe("rankStrings", () => {
+	it("keeps the order for an empty query", () => {
+		expect(rankStrings(["b", "a"], "", testFuzzy)).toEqual(["b", "a"]);
+	});
+
+	it("ranks better matches first and drops non-matches", () => {
+		expect(
+			rankStrings(["javascript", "rust", "typescript", "python"], "pt", testFuzzy),
+		).toEqual(["python", "typescript", "javascript"]);
+	});
+
+	it("prepares the scorer only once per call", () => {
+		let prepared = 0;
+		const counting: FuzzyFactory = (query) => {
+			prepared++;
+			return testFuzzy(query);
+		};
+		rankStrings(["a", "b", "c", "d"], "a", counting);
+		expect(prepared).toBe(1);
 	});
 });

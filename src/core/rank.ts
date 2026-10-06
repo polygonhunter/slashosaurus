@@ -34,3 +34,24 @@ export function rankBlocks(
 	scored.sort((a, b) => b.score - a.score);
 	return scored.map((s) => s.def);
 }
+
+/**
+ * Rank plain strings by fuzzy score, best first; non-matches are dropped.
+ * The scorer is prepared once per call, not once per item. An empty query
+ * keeps the original order.
+ */
+export function rankStrings(
+	items: readonly string[],
+	query: string,
+	fuzzy: FuzzyFactory,
+): string[] {
+	if (query.length === 0) return [...items];
+	const scorer = fuzzy(query);
+	const scored: Array<{ item: string; score: number }> = [];
+	for (const item of items) {
+		const result = scorer(item);
+		if (result) scored.push({ item, score: result.score });
+	}
+	scored.sort((a, b) => b.score - a.score);
+	return scored.map((s) => s.item);
+}

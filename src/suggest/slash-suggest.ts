@@ -14,7 +14,7 @@ import { CATALOG, LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
 import { buildInsertion, fitToLine } from "../core/insert";
-import { rankBlocks, type FuzzyFactory } from "../core/rank";
+import { rankBlocks, rankStrings, type FuzzyFactory } from "../core/rank";
 import { snippetsToBlockDefs } from "../core/snippets";
 import { detectTrigger } from "../core/trigger";
 import { GROUP_LABELS, type BlockDef, type GroupId, type TemplateEnv } from "../core/types";
@@ -156,13 +156,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	getSuggestions(context: EditorSuggestContext): SuggestItem[] {
 		this.rendered = [];
 		if (this.mode === "language") {
-			const query = context.query;
-			const languages = query
-				? LANGUAGES.map((lang) => ({ lang, match: fuzzyFactory(query)(lang) }))
-						.filter((x) => x.match !== null)
-						.sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0))
-						.map((x) => x.lang)
-				: [...LANGUAGES];
+			const languages = rankStrings(LANGUAGES, context.query, fuzzyFactory);
 			return languages.map((value) => ({ kind: "lang" as const, value }));
 		}
 
