@@ -68,11 +68,16 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 
 		// Obsidian's own Enter binding carries no modifiers, so Shift+Enter
 		// (foldable callout) needs its own scope registration.
+		// On rows that aren't foldable it simply acts like Enter (folded is
+		// gated on def.foldable in selectSuggestion), so a habitual Shift
+		// never drops a newline into the note instead of inserting.
 		this.scope.register(["Shift"], "Enter", (evt) => {
 			const hit = this.rendered.find((r) => r.el.hasClass("is-selected"));
 			if (hit && evt.instanceOf(KeyboardEvent)) {
 				this.selectSuggestion(hit.item, evt);
-				this.close();
+				// Choosing "Code block" switches to the language stage; closing
+				// now would tear that stage down before it opens.
+				if (!this.stageSwitchInFlight) this.close();
 				return false;
 			}
 			return true;
