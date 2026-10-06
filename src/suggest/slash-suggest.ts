@@ -252,7 +252,11 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		this.showLanguageInstructions();
 		const trigger = this.host.settings.triggerChar;
 		context.editor.replaceRange(trigger, context.start, context.end);
-		context.editor.setCursor({ line: context.start.line, ch: context.start.ch + 1 });
+		// trigger.length, not 1: an emoji trigger is two UTF-16 units.
+		context.editor.setCursor({
+			line: context.start.line,
+			ch: context.start.ch + trigger.length,
+		});
 	}
 
 	private finishCodeBlock(language: string | null): void {
