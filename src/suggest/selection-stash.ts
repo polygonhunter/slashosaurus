@@ -27,13 +27,19 @@ export class SelectionStashTracker {
 			if (!update.docChanged) return;
 			const trigger = this.getTriggerChar();
 			update.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
-				if (inserted.toString() === trigger && toA > fromA) {
+				// Cheap checks first: this runs on every document change, and
+				// almost none of them replace a range with exactly the trigger.
+				if (
+					toA > fromA &&
+					inserted.length === trigger.length &&
+					inserted.sliceString(0) === trigger
+				) {
 					this.stash = {
 						text: update.startState.sliceDoc(fromA, toA),
 						atOffset: fromA,
 						time: Date.now(),
 					};
-				} else {
+				} else if (this.stash !== null) {
 					this.stash = null;
 				}
 			});
