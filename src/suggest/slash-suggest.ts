@@ -84,8 +84,10 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			if (hit && evt.instanceOf(KeyboardEvent)) {
 				this.selectSuggestion(hit.item, evt);
 				// Choosing "Code block" switches to the language stage; closing
-				// now would tear that stage down before it opens.
-				if (!this.stageSwitchInFlight) this.close();
+				// now would tear that stage down. Checked via the mode, not
+				// stageSwitchInFlight: the re-trigger may already have run
+				// synchronously inside replaceRange and cleared that flag.
+				if (this.mode !== "language") this.close();
 				return false;
 			}
 			return true;

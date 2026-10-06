@@ -85,8 +85,9 @@ export interface LanguageOption {
 /**
  * Options for the language stage. There is always a way out: an empty query
  * leads with "No language", and a query that isn't an exact list entry is
- * offered verbatim first — so "/dataviewjs" or any other fence language
- * never dead-ends in an empty list.
+ * offered verbatim — so any fence language never dead-ends in an empty list.
+ * The verbatim row comes AFTER the fuzzy matches: typing "pyth" + Enter must
+ * still pick "python", not insert "```pyth".
  */
 export function languageOptions(
 	languages: readonly string[],
@@ -105,5 +106,5 @@ export function languageOptions(
 	}));
 	const lower = query.toLowerCase();
 	if (languages.some((lang) => lang.toLowerCase() === lower)) return known;
-	return [{ value: query, kind: "custom" }, ...known];
+	return [...known, { value: query, kind: "custom" }];
 }

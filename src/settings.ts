@@ -84,6 +84,8 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	hide(): void {
 		// Closing the tab flushes whatever is still waiting in the debounce.
 		this.host.requestSave.run();
+		// A pending preview refresh would re-render a tab that is gone.
+		this.refreshDefinitionsSoon.cancel();
 		super.hide();
 	}
 

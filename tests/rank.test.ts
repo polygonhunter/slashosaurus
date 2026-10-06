@@ -88,8 +88,8 @@ describe("languageOptions", () => {
 		]);
 	});
 
-	it("offers the typed query first when it isn't an exact entry", () => {
-		expect(values("py")).toEqual(["custom:py", "known:python"]);
+	it("offers the typed query after the fuzzy matches when it isn't an exact entry", () => {
+		expect(values("py")).toEqual(["known:python", "custom:py"]);
 	});
 
 	it("never dead-ends: an unknown language is still offered", () => {
