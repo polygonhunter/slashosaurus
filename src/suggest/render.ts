@@ -9,6 +9,8 @@ import type { BlockDef, TileSpec } from "../core/types";
  */
 export function renderBlockItem(def: BlockDef, el: HTMLElement, groupLabel?: string): void {
 	el.addClass("slashosaurus-item");
+	// Screen readers get the block's name, not "H2 · Aa · ```" tile noise.
+	el.setAttr("aria-label", def.name);
 	if (groupLabel) {
 		el.addClass("slashosaurus-has-group");
 		el.createDiv({ cls: "slashosaurus-group", text: groupLabel });
@@ -19,7 +21,11 @@ export function renderBlockItem(def: BlockDef, el: HTMLElement, groupLabel?: str
 	label.createDiv({ cls: "slashosaurus-name", text: def.name });
 	const hints = def.aliases.filter((a) => a !== def.name.toLowerCase()).slice(0, 3);
 	if (hints.length > 0) {
-		label.createDiv({ cls: "slashosaurus-alias", text: hints.join(" · ") });
+		label.createDiv({
+			cls: "slashosaurus-alias",
+			text: hints.join(" · "),
+			attr: { "aria-hidden": "true" },
+		});
 	}
 }
 
@@ -30,8 +36,9 @@ export function renderLanguageItem(
 	kind: "none" | "custom" | "known" = "known",
 ): void {
 	el.addClass("slashosaurus-item");
+	el.setAttr("aria-label", kind === "none" ? "No language" : language);
 	const row = el.createDiv({ cls: "slashosaurus-row" });
-	const tile = row.createDiv({ cls: "slashosaurus-tile mod-code" });
+	const tile = row.createDiv({ cls: "slashosaurus-tile mod-code", attr: { "aria-hidden": "true" } });
 	tile.createSpan({ cls: "slashosaurus-tile-mono", text: "```" });
 	const label = row.createDiv({ cls: "slashosaurus-label" });
 	label.createDiv({
@@ -46,7 +53,8 @@ export function renderLanguageItem(
 }
 
 function renderTile(row: HTMLElement, spec: TileSpec): void {
-	const tile = row.createDiv({ cls: "slashosaurus-tile" });
+	// Purely visual — the row's aria-label carries the meaning.
+	const tile = row.createDiv({ cls: "slashosaurus-tile", attr: { "aria-hidden": "true" } });
 	switch (spec.kind) {
 		case "callout": {
 			tile.addClasses(["mod-callout", `mod-callout-${spec.calloutType}`]);
