@@ -23,6 +23,24 @@ function putAtMarker(template: string, marker: string, replacement: string): str
 	return template.replace(marker, () => replacement);
 }
 
+/** Length of the longest run of backticks in `text`. */
+function longestBacktickRun(text: string): number {
+	let longest = 0;
+	for (const run of text.match(/`+/g) ?? []) longest = Math.max(longest, run.length);
+	return longest;
+}
+
+/**
+ * A selection that itself contains ``` would end a three-backtick fence
+ * early. Lengthen both fences to one more than the longest run inside.
+ */
+function widenFence(template: string, selection: string): string {
+	const length = Math.max(3, longestBacktickRun(selection) + 1);
+	if (length === 3) return template;
+	const fence = "`".repeat(length);
+	return template.replace(/^`{3,}/, () => fence).replace(/`{3,}$/, () => fence);
+}
+
 export function embedSelection(
 	template: string,
 	selection: string,
@@ -45,7 +63,7 @@ export function embedSelection(
 		}
 		case "fenced":
 			// Selection fills the block, cursor continues below it.
-			return template.replace(marker, () => selection) + "\n" + marker;
+			return widenFence(template, selection).replace(marker, () => selection) + "\n" + marker;
 		case "none":
 			// Block doesn't accept content — re-emit the selection above it.
 			return selection + "\n" + template;

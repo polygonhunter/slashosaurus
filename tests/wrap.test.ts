@@ -103,3 +103,23 @@ describe("selections with special characters", () => {
 		expect(buildInsertion(snippet, env("bold")).text).toBe("**bold");
 	});
 });
+
+describe("fenced wrap with backticks in the selection", () => {
+	it("lengthens both fences beyond the longest backtick run", () => {
+		const sel = "```js\nx\n```";
+		const plan = buildInsertion(byId("codeblock"), { ...env(sel), language: "md" });
+		expect(plan.text).toBe("````md\n" + sel + "\n````\n");
+	});
+
+	it("keeps three backticks when the selection has shorter runs", () => {
+		expect(buildInsertion(byId("codeblock"), env("a `b` ``c``")).text).toBe(
+			"```\na `b` ``c``\n```\n",
+		);
+	});
+
+	it("also widens the mermaid fence", () => {
+		expect(buildInsertion(byId("mermaid"), env("````")).text).toBe(
+			"`````mermaid\n````\n`````\n",
+		);
+	});
+});
