@@ -72,3 +72,34 @@ describe("buildInsertion with a selection", () => {
 		expect(plan.text).toBe("## alpha\n## beta");
 	});
 });
+
+describe("selections with special characters", () => {
+	it("keeps $$, $& and $` literally (no replacement patterns)", () => {
+		for (const sel of ["$$x$$", "a $& b", "$`", "$'", "$1"]) {
+			expect(buildInsertion(byId("internal-link"), env(sel)).text).toBe(`[[${sel}]]`);
+			expect(buildInsertion(byId("quote"), env(sel)).text).toBe(`> ${sel}`);
+			expect(buildInsertion(byId("codeblock"), env(sel)).text).toBe(
+				"```\n" + sel + "\n```\n",
+			);
+		}
+	});
+
+	it("keeps a literal {cursor} in the selection and places the real cursor", () => {
+		const plan = buildInsertion(byId("internal-link"), env("a {cursor} b"));
+		expect(plan.text).toBe("[[a {cursor} b]]");
+		expect(plan.cursor).toEqual({ lineDelta: 0, ch: 14 });
+	});
+
+	it("does not lose the selection when a snippet template has no {cursor}", () => {
+		const snippet: BlockDef = {
+			id: "s",
+			name: "S",
+			aliases: [],
+			group: "snippet",
+			template: "**",
+			wrap: "inline",
+			tile: { kind: "icon", icon: "x" },
+		};
+		expect(buildInsertion(snippet, env("bold")).text).toBe("**bold");
+	});
+});

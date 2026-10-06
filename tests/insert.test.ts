@@ -73,3 +73,31 @@ describe("buildInsertion", () => {
 		expect(plan.cursor).toEqual({ lineDelta: 0, ch: 2 });
 	});
 });
+
+describe("placeholders", () => {
+	const custom = (template: string): BlockDef => ({
+		id: "custom",
+		name: "Custom",
+		aliases: [],
+		group: "snippet",
+		template,
+		wrap: "inline",
+		tile: { kind: "icon", icon: "x" },
+	});
+
+	it("replaces every {date}, not just the first", () => {
+		expect(buildInsertion(custom("{date} – {date}"), env()).text).toBe(
+			"2026-07-17 – 2026-07-17",
+		);
+	});
+
+	it("keeps $ patterns in the date literally", () => {
+		expect(buildInsertion(custom("{date}"), env({ date: "$& $$" })).text).toBe("$& $$");
+	});
+
+	it("uses the first {cursor} and removes the rest", () => {
+		const plan = buildInsertion(custom("a{cursor}b{cursor}c"), env());
+		expect(plan.text).toBe("abc");
+		expect(plan.cursor).toEqual({ lineDelta: 0, ch: 1 });
+	});
+});

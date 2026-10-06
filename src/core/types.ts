@@ -3,6 +3,16 @@
  * core/) must not import from "obsidian" so it stays unit-testable.
  */
 
+/** The writing-position placeholder users put into templates. */
+export const CURSOR = "{cursor}";
+
+/**
+ * Internal stand-in for the cursor while a template is being resolved. The
+ * user's {cursor} is rewritten to this first, so a "{cursor}" that is part of
+ * the selected text (or of a date format) stays literal text.
+ */
+export const CURSOR_MARK = "\u0000C\u0000";
+
 export type GroupId = "text" | "callout" | "insert" | "snippet" | "bible";
 
 export const GROUP_ORDER: readonly GroupId[] = ["text", "callout", "insert", "snippet", "bible"];
