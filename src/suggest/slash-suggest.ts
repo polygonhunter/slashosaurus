@@ -10,12 +10,11 @@ import {
 	type TFile,
 } from "obsidian";
 import { filterAvailable } from "../core/availability";
-import { CATALOG, LANGUAGES } from "../core/catalog";
+import { LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
 import { buildInsertion, fitToLine } from "../core/insert";
 import { rankBlocks, rankStrings, type FuzzyFactory } from "../core/rank";
-import { snippetsToBlockDefs } from "../core/snippets";
 import { detectTrigger } from "../core/trigger";
 import { GROUP_LABELS, type BlockDef, type GroupId, type TemplateEnv } from "../core/types";
 import type { SettingsHost } from "../settings";
@@ -162,7 +161,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 
 		const internals = this.app as App & ObsidianInternals;
 		const defs = filterAvailable(
-			[...CATALOG, ...snippetsToBlockDefs(this.host.settings.snippets)],
+			this.host.getBlockDefs(),
 			{
 				isPluginEnabled: (id) => internals.plugins?.enabledPlugins?.has(id) ?? false,
 				hasCommand:

@@ -1,5 +1,8 @@
 import { debounce, Plugin } from "obsidian";
+import { CATALOG } from "./core/catalog";
 import { defaultSettings, normalizeSettings } from "./core/settings-normalize";
+import { snippetsToBlockDefs } from "./core/snippets";
+import { GROUP_ORDER, type BlockDef } from "./core/types";
 import { SlashosaurusSettingTab, type SlashosaurusSettings } from "./settings";
 import { SelectionStashTracker } from "./suggest/selection-stash";
 import { SlashSuggest } from "./suggest/slash-suggest";
@@ -41,8 +44,23 @@ export default class SlashosaurusPlugin extends Plugin {
 		this.requestSave.run();
 	}
 
+	/** Built-in catalog plus the user's snippets, in empty-query order. */
+	private blockDefs: readonly BlockDef[] | null = null;
+
+	/** Cached per settings state, so typing in the editor doesn't rebuild the
+	 *  snippet defs on every keystroke. Plugin availability is NOT baked in —
+	 *  the suggest filters that per trigger, since plugins come and go. */
+	getBlockDefs(): readonly BlockDef[] {
+		if (this.blockDefs === null) {
+			this.blockDefs = [...CATALOG, ...snippetsToBlockDefs(this.settings.snippets)].sort(
+				(a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group),
+			);
+		}
+		return this.blockDefs;
+	}
+
+	/** Called by the settings tab after every change: drops derived caches. */
 	onSettingsChanged(): void {
-		// The suggest reads settings through the host on every trigger, so
-		// nothing needs to be rebuilt eagerly (yet).
+		this.blockDefs = null;
 	}
 }

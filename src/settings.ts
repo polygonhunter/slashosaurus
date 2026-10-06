@@ -8,7 +8,7 @@ import {
 	type SettingDefinitionItem,
 } from "obsidian";
 import { formatDate } from "./core/dateformat";
-import type { UserSnippet } from "./core/types";
+import type { BlockDef, UserSnippet } from "./core/types";
 import { validateSnippet } from "./core/snippets";
 import {
 	DEFAULT_SETTINGS,
@@ -25,8 +25,10 @@ export interface SettingsHost extends Plugin {
 	saveSettings(): Promise<void>;
 	/** Debounced write — for per-keystroke edits. */
 	requestSave: Debouncer<[], void>;
-	/** Re-apply anything derived from settings (catalog with snippets, trigger). */
+	/** Drop anything derived from settings (cached catalog with snippets). */
 	onSettingsChanged(): void;
+	/** Catalog plus snippets, cached until the next onSettingsChanged(). */
+	getBlockDefs(): readonly BlockDef[];
 }
 
 const HEADS_UP = {
