@@ -41,7 +41,16 @@ const TRIGGER = {
 	name: "Trigger character",
 	desc: "The character that opens the menu. Must be a single character.",
 };
+const TRIGGER_INVALID = "Must be a single character — the previous one stays active.";
 const DATE_FORMAT = { name: "Date format" };
+
+/** Non-public App surface for the core-plugin check. Not in the official
+ *  typings — every access is optional. */
+interface InternalPluginsHost {
+	internalPlugins?: {
+		getPluginById?(id: string): { enabled?: boolean } | null | undefined;
+	};
+}
 const SNIPPETS_INTRO =
 	"Your own blocks for the menu. Put {cursor} where writing should continue (without it the cursor lands at the end). Also filled in: {selection} (selected text), {date} (in the format above), {time} (HH:mm) and {title} (note name).";
 
@@ -89,12 +98,28 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	 *  for live previews that would otherwise re-render on every keystroke. */
 	private readonly refreshDefinitionsSoon = debounce(() => this.refreshDefinitions(), 400, true);
 
+	/**
+	 * The heads-up only matters when both menus would open on "/": our
+	 * trigger is "/" and the core "Slash commands" plugin is on. If the
+	 * internal API can't tell, it stays visible to be safe.
+	 */
+	private showHeadsUp(): boolean {
+		if (this.host.settings.triggerChar !== "/") return false;
+		const internal = (this.app as App & InternalPluginsHost).internalPlugins;
+		if (typeof internal?.getPluginById !== "function") return true;
+		return internal.getPluginById("slash-command")?.enabled !== false;
+	}
+
+	private snippetName(snippet: UserSnippet, index: number): string {
+		return snippet.name || `Snippet ${index + 1}`;
+	}
+
 	// ── Declarative path (1.13+) ────────────────────────────────────────
 
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const settings = this.host.settings;
 		return [
-			{ ...HEADS_UP },
+			...(this.showHeadsUp() ? [{ ...HEADS_UP }] : []),
 			{
 				...TRIGGER,
 				control: {
@@ -121,10 +146,10 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 				heading: "Snippets",
 				emptyState: SNIPPETS_INTRO,
 				items: settings.snippets.map((snippet, index) => ({
-					name: snippet.name || `Snippet ${index + 1}`,
+					name: this.snippetName(snippet, index),
 					render: (setting: Setting) => {
 						setting.setDesc(validateSnippet(snippet) ?? "");
-						this.addSnippetControls(setting, snippet);
+						this.addSnippetControls(setting, snippet, index);
 					},
 				})),
 				addItem: {
@@ -168,13 +193,20 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 			return;
 		}
 		this.persist();
-		// Refresh the live "Currently: …" preview in the date format desc —
-		// debounced, so typing a format doesn't re-render per keystroke.
-		if (key === "dateFormat") this.refreshDefinitionsSoon();
+		// Refresh the live "Currently: …" preview in the date format desc and
+		// the trigger-dependent heads-up — debounced, so typing doesn't
+		// re-render per keystroke.
+		this.refreshDefinitionsSoon();
 	}
 
 	/** Name + template controls for one snippet row — shared by both paths. */
-	private addSnippetControls(setting: Setting, snippet: UserSnippet): void {
+	private addSnippetControls(setting: Setting, snippet: UserSnippet, index: number): void {
+		// Keep the row's title and problem hint in step with the inputs —
+		// without re-rendering, which would steal focus.
+		const refreshRow = (): void => {
+			setting.setName(this.snippetName(snippet, index));
+			setting.setDesc(validateSnippet(snippet) ?? "");
+		};
 		setting
 			.addText((text) =>
 				text
@@ -182,6 +214,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.setValue(snippet.name)
 					.onChange((value) => {
 						snippet.name = value;
+						refreshRow();
 						this.persist();
 					}),
 			)
@@ -191,6 +224,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.setValue(snippet.template)
 					.onChange((value) => {
 						snippet.template = value;
+						refreshRow();
 						this.persist();
 					}),
 			);
@@ -208,22 +242,26 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		containerEl.empty();
 		const settings = this.host.settings;
 
-		new Setting(containerEl).setName(HEADS_UP.name).setDesc(HEADS_UP.desc);
+		const headsUp = new Setting(containerEl).setName(HEADS_UP.name).setDesc(HEADS_UP.desc);
+		headsUp.settingEl.toggle(this.showHeadsUp());
 
-		new Setting(containerEl)
-			.setName(TRIGGER.name)
-			.setDesc(TRIGGER.desc)
-			.addText((text) =>
-				text
-					.setPlaceholder(DEFAULT_SETTINGS.triggerChar)
-					.setValue(settings.triggerChar)
-					.onChange((value) => {
-						const char = value.trim();
-						if (!isSingleChar(char)) return;
-						settings.triggerChar = char;
-						this.persist();
-					}),
-			);
+		const triggerSetting = new Setting(containerEl).setName(TRIGGER.name).setDesc(TRIGGER.desc);
+		triggerSetting.addText((text) =>
+			text
+				.setPlaceholder(DEFAULT_SETTINGS.triggerChar)
+				.setValue(settings.triggerChar)
+				.onChange((value) => {
+					const char = value.trim();
+					const valid = isSingleChar(char);
+					// Say why nothing happens instead of silently ignoring.
+					text.inputEl.toggleClass("is-invalid", !valid);
+					triggerSetting.setDesc(valid ? TRIGGER.desc : TRIGGER_INVALID);
+					if (!valid) return;
+					settings.triggerChar = char;
+					headsUp.settingEl.toggle(this.showHeadsUp());
+					this.persist();
+				}),
+		);
 
 		const dateSetting = new Setting(containerEl)
 			.setName(DATE_FORMAT.name)
@@ -247,9 +285,9 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 
 		settings.snippets.forEach((snippet, index) => {
 			const row = new Setting(containerEl)
-				.setName(snippet.name || `Snippet ${index + 1}`)
+				.setName(this.snippetName(snippet, index))
 				.setDesc(validateSnippet(snippet) ?? "");
-			this.addSnippetControls(row, snippet);
+			this.addSnippetControls(row, snippet, index);
 			row.addExtraButton((button) =>
 				button
 					.setIcon("x")
