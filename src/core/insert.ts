@@ -50,3 +50,43 @@ export function resolveCursor(template: string, marker: string = CURSOR): Insert
 		},
 	};
 }
+
+/** Blocks that only work at the start of their own line. Inline constructs
+ *  and single-line "none" blocks (date, plugin commands) may sit mid-line. */
+export function isBlockLevel(def: BlockDef): boolean {
+	if (def.wrap === "prefixLines" || def.wrap === "fenced") return true;
+	return def.wrap === "none" && def.template.includes("\n");
+}
+
+/** Only whitespace and quote markers — typing "> /note" stays in the quote. */
+const CONTAINER_ONLY = /^(?:\s*>)*\s*$/;
+
+/**
+ * Make a block-level insertion fit the line it lands on: text left of the
+ * trigger pushes the block onto its own line, and text right of the cursor
+ * is moved below a multi-line block instead of gluing onto its last line
+ * (e.g. behind a closing code fence).
+ */
+export function fitToLine(
+	plan: InsertPlan,
+	def: BlockDef,
+	lineBefore: string,
+	lineAfter: string,
+): InsertPlan {
+	if (!isBlockLevel(def)) return plan;
+	let text = plan.text;
+	let cursor = plan.cursor;
+	const multiLine = text.includes("\n");
+	if (!CONTAINER_ONLY.test(lineBefore)) {
+		// Divider and table need a blank line above: "text\n---" would turn
+		// the text into a setext heading, and tables don't interrupt a
+		// paragraph. Headings, quotes, lists and fences only need a new line.
+		const breaks = def.wrap === "none" ? "\n\n" : "\n";
+		text = breaks + text;
+		// The block now starts at column 0 of a later line, so the relative
+		// column becomes an absolute one unchanged.
+		cursor = { lineDelta: cursor.lineDelta + breaks.length, ch: cursor.ch };
+	}
+	if (multiLine && lineAfter.trim().length > 0) text += "\n";
+	return { text, cursor };
+}

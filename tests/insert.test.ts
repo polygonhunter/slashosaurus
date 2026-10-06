@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CATALOG } from "../src/core/catalog";
-import { buildInsertion, resolveCursor } from "../src/core/insert";
+import { buildInsertion, fitToLine, resolveCursor } from "../src/core/insert";
 import type { BlockDef, TemplateEnv } from "../src/core/types";
 
 const env = (overrides: Partial<TemplateEnv> = {}): TemplateEnv => ({
@@ -99,5 +99,54 @@ describe("placeholders", () => {
 		const plan = buildInsertion(custom("a{cursor}b{cursor}c"), env());
 		expect(plan.text).toBe("abc");
 		expect(plan.cursor).toEqual({ lineDelta: 0, ch: 1 });
+	});
+});
+
+describe("fitToLine", () => {
+	const fit = (id: string, before: string, after: string, overrides: Partial<TemplateEnv> = {}) =>
+		fitToLine(buildInsertion(byId(id), env(overrides)), byId(id), before, after);
+
+	it("leaves a block at the start of an empty line alone", () => {
+		expect(fit("codeblock", "", "")).toEqual(buildInsertion(byId("codeblock"), env()));
+	});
+
+	it("moves trailing text below a code block typed at the line start (/code before Hallo)", () => {
+		const plan = fit("codeblock", "", "Hallo");
+		expect(plan.text).toBe("```\n\n```\n");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 0 });
+	});
+
+	it("starts a heading on its own line after text (Text /h1)", () => {
+		const plan = fit("h1", "Text ", "");
+		expect(plan.text).toBe("\n# ");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 2 });
+	});
+
+	it("does both for a multi-line block in the middle of a line", () => {
+		const plan = fit("callout-note", "before ", " after");
+		expect(plan.text).toBe("\n> [!note]\n> \n");
+		expect(plan.cursor).toEqual({ lineDelta: 2, ch: 2 });
+	});
+
+	it("keeps a single-line block glued to trailing text", () => {
+		expect(fit("h2", "", "rest").text).toBe("## ");
+	});
+
+	it("never touches inline blocks or the date", () => {
+		expect(fit("internal-link", "see ", " here").text).toBe("[[]]");
+		expect(fit("date", "Due: ", "").text).toBe("2026-07-17");
+	});
+
+	it("treats quote markers and indentation as an empty line", () => {
+		expect(fit("callout-tip", "> ", "").text).toBe("> [!tip]\n> ");
+		expect(fit("h1", "   ", "").text).toBe("# ");
+	});
+
+	it("separates divider and table from text by a blank line", () => {
+		// "abc\n---" would be a setext heading.
+		expect(fit("divider", "abc", "").text).toBe("\n\n---\n");
+		const table = fit("table", "abc ", "");
+		expect(table.text.startsWith("\n\n| ")).toBe(true);
+		expect(table.cursor).toEqual({ lineDelta: 2, ch: 2 });
 	});
 });

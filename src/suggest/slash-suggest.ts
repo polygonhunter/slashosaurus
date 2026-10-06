@@ -12,7 +12,7 @@ import { filterAvailable } from "../core/availability";
 import { CATALOG, LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
-import { buildInsertion } from "../core/insert";
+import { buildInsertion, fitToLine } from "../core/insert";
 import { rankBlocks, type FuzzyFactory } from "../core/rank";
 import { snippetsToBlockDefs } from "../core/snippets";
 import { detectTrigger } from "../core/trigger";
@@ -279,7 +279,13 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			folded: opts.folded,
 			language: opts.language,
 		};
-		const plan = buildInsertion(def, env);
+		const { editor } = context;
+		const plan = fitToLine(
+			buildInsertion(def, env),
+			def,
+			editor.getLine(context.start.line).slice(0, context.start.ch),
+			editor.getLine(context.end.line).slice(context.end.ch),
+		);
 		context.editor.replaceRange(plan.text, context.start, context.end);
 		context.editor.setCursor({
 			line: context.start.line + plan.cursor.lineDelta,
