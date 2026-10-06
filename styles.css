@@ -125,21 +125,22 @@
 	color: rgb(var(--slashosaurus-accent));
 }
 
-.mod-callout-note     { --slashosaurus-accent: var(--callout-default, 68, 138, 255); }
-.mod-callout-abstract { --slashosaurus-accent: var(--callout-summary, 0, 191, 188); }
-.mod-callout-info     { --slashosaurus-accent: var(--callout-info, 0, 184, 212); }
-.mod-callout-todo     { --slashosaurus-accent: var(--callout-todo, 0, 184, 212); }
-.mod-callout-tip      { --slashosaurus-accent: var(--callout-important, 0, 191, 188); }
-.mod-callout-success  { --slashosaurus-accent: var(--callout-success, 68, 207, 110); }
-.mod-callout-question { --slashosaurus-accent: var(--callout-question, 236, 117, 0); }
-.mod-callout-warning  { --slashosaurus-accent: var(--callout-warning, 236, 117, 0); }
-.mod-callout-failure  { --slashosaurus-accent: var(--callout-fail, 233, 49, 71); }
-.mod-callout-danger   { --slashosaurus-accent: var(--callout-error, 233, 49, 71); }
-.mod-callout-bug      { --slashosaurus-accent: var(--callout-bug, 233, 49, 71); }
-.mod-callout-example  { --slashosaurus-accent: var(--callout-example, 120, 82, 238); }
-.mod-callout-quote    { --slashosaurus-accent: var(--callout-quote, 158, 158, 158); }
-/* Synthetic type for the Daily Bible Verse preview tile. */
-.mod-callout-bible    { --slashosaurus-accent: var(--callout-quote, 168, 130, 87); }
+.slashosaurus-tile.mod-callout-note     { --slashosaurus-accent: var(--callout-default, 68, 138, 255); }
+.slashosaurus-tile.mod-callout-abstract { --slashosaurus-accent: var(--callout-summary, 0, 191, 188); }
+.slashosaurus-tile.mod-callout-info     { --slashosaurus-accent: var(--callout-info, 0, 184, 212); }
+.slashosaurus-tile.mod-callout-todo     { --slashosaurus-accent: var(--callout-todo, 0, 184, 212); }
+.slashosaurus-tile.mod-callout-tip      { --slashosaurus-accent: var(--callout-important, 0, 191, 188); }
+.slashosaurus-tile.mod-callout-success  { --slashosaurus-accent: var(--callout-success, 68, 207, 110); }
+.slashosaurus-tile.mod-callout-question { --slashosaurus-accent: var(--callout-question, 236, 117, 0); }
+.slashosaurus-tile.mod-callout-warning  { --slashosaurus-accent: var(--callout-warning, 236, 117, 0); }
+.slashosaurus-tile.mod-callout-failure  { --slashosaurus-accent: var(--callout-fail, 233, 49, 71); }
+.slashosaurus-tile.mod-callout-danger   { --slashosaurus-accent: var(--callout-error, 233, 49, 71); }
+.slashosaurus-tile.mod-callout-bug      { --slashosaurus-accent: var(--callout-bug, 233, 49, 71); }
+.slashosaurus-tile.mod-callout-example  { --slashosaurus-accent: var(--callout-example, 120, 82, 238); }
+.slashosaurus-tile.mod-callout-quote    { --slashosaurus-accent: var(--callout-quote, 158, 158, 158); }
+/* Synthetic type for the Daily Bible Verse preview tile. A fixed color:
+   var(--callout-quote, …) never fell back, since every theme defines it. */
+.slashosaurus-tile.mod-callout-bible    { --slashosaurus-accent: 168, 130, 87; }
 
 .slashosaurus-tile-icon {
 	display: flex;
