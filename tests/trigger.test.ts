@@ -46,4 +46,24 @@ describe("detectTrigger", () => {
 	it("returns null for an empty trigger character", () => {
 		expect(detectTrigger("/x", "")).toBeNull();
 	});
+
+	it("handles the fast path on long lines", () => {
+		const long = "x".repeat(5000);
+		expect(detectTrigger(long, "/")).toBeNull();
+		expect(detectTrigger(`${long} /wa`, "/")).toEqual({ startCh: 5001, query: "wa" });
+		expect(detectTrigger(`${long}/wa`, "/")).toBeNull();
+		expect(detectTrigger(`/wa ${long}`, "/")).toBeNull();
+	});
+
+	it("works with a two-unit emoji trigger", () => {
+		expect(detectTrigger("ab 🦖no", "🦖")).toEqual({ startCh: 3, query: "no" });
+		expect(detectTrigger("🦖", "🦖")).toEqual({ startCh: 0, query: "" });
+		expect(detectTrigger("a🦖", "🦖")).toBeNull();
+	});
+
+	it("keeps the full scan for triggers that are query characters", () => {
+		// The last "-" sits inside the query; the trigger is the first one.
+		expect(detectTrigger("-to-do", "-")).toEqual({ startCh: 0, query: "to-do" });
+		expect(detectTrigger("text x1", "x")).toEqual({ startCh: 5, query: "1" });
+	});
 });
