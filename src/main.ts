@@ -1,4 +1,4 @@
-import { Plugin } from "obsidian";
+import { debounce, Plugin } from "obsidian";
 import {
 	DEFAULT_SETTINGS,
 	SlashosaurusSettingTab,
@@ -9,6 +9,10 @@ import { SlashSuggest } from "./suggest/slash-suggest";
 
 export default class SlashosaurusPlugin extends Plugin {
 	settings: SlashosaurusSettings = { ...DEFAULT_SETTINGS };
+
+	/** Coalesces bursts of edits (typing in a settings field) into one
+	 *  data.json write once the user pauses. */
+	readonly requestSave = debounce(() => void this.saveData(this.settings), 400, true);
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -23,8 +27,16 @@ export default class SlashosaurusPlugin extends Plugin {
 		this.settings = { ...DEFAULT_SETTINGS, ...(stored as Partial<SlashosaurusSettings>) };
 	}
 
+	/** Write immediately (structural changes: delete, reorder). Any pending
+	 *  debounced write is superseded by this one. */
 	async saveSettings(): Promise<void> {
+		this.requestSave.cancel();
 		await this.saveData(this.settings);
+	}
+
+	onunload(): void {
+		// Don't lose the last keystrokes if the plugin is disabled mid-typing.
+		this.requestSave.run();
 	}
 
 	onSettingsChanged(): void {

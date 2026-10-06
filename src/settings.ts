@@ -3,6 +3,7 @@ import {
 	PluginSettingTab,
 	Setting,
 	type App,
+	type Debouncer,
 	type Plugin,
 	type SettingDefinitionItem,
 } from "obsidian";
@@ -28,7 +29,10 @@ export const DEFAULT_SETTINGS: SlashosaurusSettings = {
 /** Structural host interface — avoids a settings.ts ↔ main.ts import cycle. */
 export interface SettingsHost extends Plugin {
 	settings: SlashosaurusSettings;
+	/** Immediate write. */
 	saveSettings(): Promise<void>;
+	/** Debounced write — for per-keystroke edits. */
+	requestSave: Debouncer<[], void>;
 	/** Re-apply anything derived from settings (catalog with snippets, trigger). */
 	onSettingsChanged(): void;
 }
@@ -59,9 +63,23 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		super(app, host);
 	}
 
-	private async persist(): Promise<void> {
+	/** Per-keystroke edits: in-memory settings change now, disk write is
+	 *  debounced. */
+	private persist(): void {
+		this.host.requestSave();
+		this.host.onSettingsChanged();
+	}
+
+	/** Structural edits (delete, reorder): written immediately. */
+	private async persistNow(): Promise<void> {
 		await this.host.saveSettings();
 		this.host.onSettingsChanged();
+	}
+
+	hide(): void {
+		// Closing the tab flushes whatever is still waiting in the debounce.
+		this.host.requestSave.run();
+		super.hide();
 	}
 
 	/** Re-render/re-index the declarative tab. Only ever invoked from the
@@ -122,13 +140,13 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 				},
 				onDelete: (index: number) => {
 					settings.snippets.splice(index, 1);
-					void this.persist().then(() => this.refreshDefinitions());
+					void this.persistNow().then(() => this.refreshDefinitions());
 				},
 				onReorder: (oldIndex: number, newIndex: number) => {
 					const [moved] = settings.snippets.splice(oldIndex, 1);
 					if (moved === undefined) return;
 					settings.snippets.splice(newIndex, 0, moved);
-					void this.persist().then(() => this.refreshDefinitions());
+					void this.persistNow().then(() => this.refreshDefinitions());
 				},
 			},
 		];
@@ -150,7 +168,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 		} else {
 			return;
 		}
-		await this.persist();
+		this.persist();
 		// Refresh the live "Currently: …" preview in the date format desc —
 		// debounced, so typing a format doesn't re-render per keystroke.
 		if (key === "dateFormat") this.refreshDefinitionsSoon();
@@ -163,18 +181,18 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder("Name")
 					.setValue(snippet.name)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						snippet.name = value;
-						await this.persist();
+						this.persist();
 					}),
 			)
 			.addTextArea((area) =>
 				area
 					.setPlaceholder("Template with {cursor}")
 					.setValue(snippet.template)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						snippet.template = value;
-						await this.persist();
+						this.persist();
 					}),
 			);
 	}
@@ -200,11 +218,11 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 				text
 					.setPlaceholder(DEFAULT_SETTINGS.triggerChar)
 					.setValue(settings.triggerChar)
-					.onChange(async (value) => {
+					.onChange((value) => {
 						const char = value.trim();
 						if (char.length !== 1) return;
 						settings.triggerChar = char;
-						await this.persist();
+						this.persist();
 					}),
 			);
 
@@ -215,12 +233,12 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 			text
 				.setPlaceholder(DEFAULT_SETTINGS.dateFormat)
 				.setValue(settings.dateFormat)
-				.onChange(async (value) => {
+				.onChange((value) => {
 					settings.dateFormat = value.trim() || DEFAULT_SETTINGS.dateFormat;
 					// Only the preview changes — re-rendering the whole tab
 					// here would steal focus from the input after every key.
 					dateSetting.setDesc(this.dateFormatDesc(settings.dateFormat));
-					await this.persist();
+					this.persist();
 				}),
 		);
 
@@ -239,7 +257,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.setTooltip("Remove")
 					.onClick(async () => {
 						settings.snippets.splice(index, 1);
-						await this.persist();
+						await this.persistNow();
 						this.renderLegacy();
 					}),
 			);
