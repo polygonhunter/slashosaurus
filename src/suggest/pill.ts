@@ -13,7 +13,12 @@ export class SelectionPill {
 
 	/** Idempotent; call freely on every render pass. */
 	mount(containerEl: HTMLElement): void {
-		if (Platform.isMobile) return;
+		if (Platform.isMobile) {
+			// No pill on touch devices — but the selected row still needs the
+			// fallback highlight (tablets are not body.is-phone).
+			containerEl.addClass("slashosaurus-no-pill");
+			return;
+		}
 		if (this.pillEl && this.pillEl.isConnected) return;
 		this.destroy();
 		const listEl = containerEl.querySelector<HTMLElement>(".suggestion");

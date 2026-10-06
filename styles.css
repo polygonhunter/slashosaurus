@@ -330,11 +330,12 @@ body.is-phone .suggestion-container.slashosaurus-popover {
 	animation: none;
 }
 
-body.is-phone .slashosaurus-pill {
+/* is-mobile, not is-phone: tablets don't get the pill either. */
+body.is-mobile .slashosaurus-pill {
 	display: none;
 }
 
-body.is-phone .slashosaurus-popover .suggestion-item.is-selected {
+body.is-mobile .slashosaurus-popover .suggestion-item.is-selected {
 	background: var(--background-modifier-hover);
 }
 
