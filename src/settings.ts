@@ -1,4 +1,5 @@
 import {
+	debounce,
 	PluginSettingTab,
 	Setting,
 	type App,
@@ -69,6 +70,10 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	private refreshDefinitions(): void {
 		(this as { update?: () => void }).update?.();
 	}
+
+	/** Same as refreshDefinitions, but at most once per typing pause — used
+	 *  for live previews that would otherwise re-render on every keystroke. */
+	private readonly refreshDefinitionsSoon = debounce(() => this.refreshDefinitions(), 400, true);
 
 	// ── Declarative path (1.13+) ────────────────────────────────────────
 
@@ -146,8 +151,9 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 			return;
 		}
 		await this.persist();
-		// Refresh the live "Currently: …" preview in the date format desc.
-		if (key === "dateFormat") this.refreshDefinitions();
+		// Refresh the live "Currently: …" preview in the date format desc —
+		// debounced, so typing a format doesn't re-render per keystroke.
+		if (key === "dateFormat") this.refreshDefinitionsSoon();
 	}
 
 	/** Name + template controls for one snippet row — shared by both paths. */
@@ -202,19 +208,21 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		new Setting(containerEl)
+		const dateSetting = new Setting(containerEl)
 			.setName(DATE_FORMAT.name)
-			.setDesc(this.dateFormatDesc(settings.dateFormat))
-			.addText((text) =>
-				text
-					.setPlaceholder(DEFAULT_SETTINGS.dateFormat)
-					.setValue(settings.dateFormat)
-					.onChange(async (value) => {
-						settings.dateFormat = value.trim() || DEFAULT_SETTINGS.dateFormat;
-						await this.persist();
-						this.renderLegacy();
-					}),
-			);
+			.setDesc(this.dateFormatDesc(settings.dateFormat));
+		dateSetting.addText((text) =>
+			text
+				.setPlaceholder(DEFAULT_SETTINGS.dateFormat)
+				.setValue(settings.dateFormat)
+				.onChange(async (value) => {
+					settings.dateFormat = value.trim() || DEFAULT_SETTINGS.dateFormat;
+					// Only the preview changes — re-rendering the whole tab
+					// here would steal focus from the input after every key.
+					dateSetting.setDesc(this.dateFormatDesc(settings.dateFormat));
+					await this.persist();
+				}),
+		);
 
 		new Setting(containerEl).setName("Snippets").setHeading();
 
