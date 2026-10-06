@@ -1,5 +1,6 @@
 import {
 	EditorSuggest,
+	Notice,
 	prepareFuzzySearch,
 	type App,
 	type Editor,
@@ -32,7 +33,10 @@ const fuzzyFactory: FuzzyFactory = (query) => prepareFuzzySearch(query);
  *  official typings — keep every access defensive. */
 interface ObsidianInternals {
 	plugins?: { enabledPlugins?: Set<string> };
-	commands?: { executeCommandById(id: string): boolean };
+	commands?: {
+		executeCommandById(id: string): boolean;
+		findCommand?(id: string): unknown;
+	};
 }
 
 export class SlashSuggest extends EditorSuggest<SuggestItem> {
@@ -165,7 +169,13 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		const internals = this.app as App & ObsidianInternals;
 		const defs = filterAvailable(
 			[...CATALOG, ...snippetsToBlockDefs(this.host.settings.snippets)],
-			{ isPluginEnabled: (id) => internals.plugins?.enabledPlugins?.has(id) ?? false },
+			{
+				isPluginEnabled: (id) => internals.plugins?.enabledPlugins?.has(id) ?? false,
+				hasCommand:
+					typeof internals.commands?.findCommand === "function"
+						? (id) => internals.commands?.findCommand?.(id) != null
+						: undefined,
+			},
 		);
 		const ranked = rankBlocks(defs, context.query, fuzzyFactory);
 		if (context.query.length > 0) {
@@ -237,9 +247,10 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			// parks the cursor; the foreign plugin then writes at it.
 			this.insertBlock(context, item.def, { folded: false, language: null });
 			if (item.def.commandId) {
-				(this.app as App & ObsidianInternals).commands?.executeCommandById(
+				const ran = (this.app as App & ObsidianInternals).commands?.executeCommandById(
 					item.def.commandId,
 				);
+				if (ran !== true) new Notice(`Slashosaurus: "${item.def.name}" is not available.`);
 			}
 			return;
 		}

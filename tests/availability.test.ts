@@ -26,6 +26,20 @@ describe("filterAvailable", () => {
 		expect(defs.filter((d) => d.group === "bible").map((d) => d.id)).toEqual(BIBLE_IDS);
 	});
 
+	it("hides a command entry whose command is not registered", () => {
+		const defs = filterAvailable(CATALOG, {
+			isPluginEnabled: () => true,
+			hasCommand: (id) => id === "daily-bible-verse:insert-todays-verse",
+		});
+		expect(defs.filter((d) => d.group === "bible").map((d) => d.id)).toEqual(["bible-verse"]);
+		expect(defs).toHaveLength(CATALOG.length - 1);
+	});
+
+	it("keeps command entries when the command check is unavailable", () => {
+		const defs = filterAvailable(CATALOG, { isPluginEnabled: () => true });
+		expect(defs.filter((d) => d.group === "bible")).toHaveLength(2);
+	});
+
 	it("queries the capability with the declared plugin id only", () => {
 		const asked: string[] = [];
 		filterAvailable(CATALOG, {
