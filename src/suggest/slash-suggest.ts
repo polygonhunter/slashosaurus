@@ -90,7 +90,6 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			}
 			return true;
 		});
-
 	}
 
 	private showBlockInstructions(): void {
