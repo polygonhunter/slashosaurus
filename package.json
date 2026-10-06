@@ -23,7 +23,7 @@
 		"@codemirror/view": "6.38.6",
 		"@types/node": "^22",
 		"esbuild": "0.25.5",
-		"obsidian": "latest",
+		"obsidian": "1.13.1",
 		"typescript": "^5.8.3",
 		"vitest": "^3.2.4"
 	}
