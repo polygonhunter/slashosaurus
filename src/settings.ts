@@ -10,21 +10,13 @@ import {
 import { formatDate } from "./core/dateformat";
 import type { UserSnippet } from "./core/types";
 import { validateSnippet } from "./core/snippets";
+import {
+	DEFAULT_SETTINGS,
+	isSingleChar,
+	type SlashosaurusSettings,
+} from "./core/settings-normalize";
 
-export interface SlashosaurusSettings {
-	/** Character that opens the menu. One character, defaults to "/". */
-	triggerChar: string;
-	/** Moment format for the "Today's date" block. */
-	dateFormat: string;
-	/** User-defined blocks; {cursor} marks the writing position. */
-	snippets: UserSnippet[];
-}
-
-export const DEFAULT_SETTINGS: SlashosaurusSettings = {
-	triggerChar: "/",
-	dateFormat: "YYYY-MM-DD",
-	snippets: [],
-};
+export { DEFAULT_SETTINGS, type SlashosaurusSettings } from "./core/settings-normalize";
 
 /** Structural host interface — avoids a settings.ts ↔ main.ts import cycle. */
 export interface SettingsHost extends Plugin {
@@ -107,7 +99,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					placeholder: DEFAULT_SETTINGS.triggerChar,
 					defaultValue: DEFAULT_SETTINGS.triggerChar,
 					validate: (value: string) =>
-						value.trim().length === 1 ? undefined : "Must be a single character.",
+						isSingleChar(value) ? undefined : "Must be a single character.",
 				},
 			},
 			{
@@ -162,7 +154,10 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	async setControlValue(key: string, value: unknown): Promise<void> {
 		const settings = this.host.settings;
 		if (key === "triggerChar") {
-			settings.triggerChar = String(value).trim();
+			const char = String(value).trim();
+			// validate() only flags the field; never store an unusable trigger.
+			if (!isSingleChar(char)) return;
+			settings.triggerChar = char;
 		} else if (key === "dateFormat") {
 			settings.dateFormat = String(value).trim() || DEFAULT_SETTINGS.dateFormat;
 		} else {
@@ -220,7 +215,7 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.setValue(settings.triggerChar)
 					.onChange((value) => {
 						const char = value.trim();
-						if (char.length !== 1) return;
+						if (!isSingleChar(char)) return;
 						settings.triggerChar = char;
 						this.persist();
 					}),

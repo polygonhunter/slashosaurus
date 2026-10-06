@@ -1,14 +1,11 @@
 import { debounce, Plugin } from "obsidian";
-import {
-	DEFAULT_SETTINGS,
-	SlashosaurusSettingTab,
-	type SlashosaurusSettings,
-} from "./settings";
+import { defaultSettings, normalizeSettings } from "./core/settings-normalize";
+import { SlashosaurusSettingTab, type SlashosaurusSettings } from "./settings";
 import { SelectionStashTracker } from "./suggest/selection-stash";
 import { SlashSuggest } from "./suggest/slash-suggest";
 
 export default class SlashosaurusPlugin extends Plugin {
-	settings: SlashosaurusSettings = { ...DEFAULT_SETTINGS };
+	settings: SlashosaurusSettings = defaultSettings();
 
 	/** Coalesces bursts of edits (typing in a settings field) into one
 	 *  data.json write once the user pauses. */
@@ -24,7 +21,9 @@ export default class SlashosaurusPlugin extends Plugin {
 
 	async loadSettings(): Promise<void> {
 		const stored: unknown = await this.loadData();
-		this.settings = { ...DEFAULT_SETTINGS, ...(stored as Partial<SlashosaurusSettings>) };
+		// Validate field by field: a hand-edited or outdated data.json must not
+		// produce a multi-character trigger or a non-array snippets list.
+		this.settings = normalizeSettings(stored);
 	}
 
 	/** Write immediately (structural changes: delete, reorder). Any pending
