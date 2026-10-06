@@ -100,3 +100,36 @@ describe("languageOptions", () => {
 		expect(values("Python")).toEqual(["known:python"]);
 	});
 });
+
+describe("rankBlocks with recently used blocks", () => {
+	it("leads the empty-query list with a Recent group, originals stay put", () => {
+		const ranked = rankBlocks(CATALOG, "", testFuzzy, ["table", "h2"]);
+		expect(ranked.slice(0, 2).map((d) => `${d.group}:${d.id}`)).toEqual([
+			"recent:table",
+			"recent:h2",
+		]);
+		expect(ranked).toHaveLength(CATALOG.length + 2);
+		expect(ranked.filter((d) => d.id === "table" && d.group === "insert")).toHaveLength(1);
+	});
+
+	it("skips recent ids that are no longer available", () => {
+		const ranked = rankBlocks(CATALOG, "", testFuzzy, ["snippet:gone", "h1"]);
+		expect(ranked[0]?.id).toBe("h1");
+		expect(ranked[1]?.group).not.toBe("recent");
+	});
+
+	it("does not mutate the catalog defs", () => {
+		rankBlocks(CATALOG, "", testFuzzy, ["h1"]);
+		expect(CATALOG.find((d) => d.id === "h1")?.group).toBe("text");
+	});
+
+	it("breaks score ties in favor of recent blocks while typing", () => {
+		// testFuzzy gives h1/h2/h3 the same score for "h".
+		const plain = rankBlocks(CATALOG, "h", testFuzzy);
+		const withRecent = rankBlocks(CATALOG, "h", testFuzzy, ["h3"]);
+		expect(plain.indexOf(plain.find((d) => d.id === "h3")!)).toBeGreaterThan(0);
+		expect(withRecent[0]?.id).toBe("h3");
+		// No group change and no duplicates while typing.
+		expect(withRecent).toHaveLength(plain.length);
+	});
+});

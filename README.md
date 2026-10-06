@@ -30,6 +30,7 @@ Slashosaurus is the fourth plugin in the -osaurus family, next to [**Linkosaurus
 - **Smart insert** — the typed `/query` vanishes without a trace and the cursor lands where writing continues: inside the callout body, in the first table cell, on the empty line of the code block.
 - **Two-stage code block** — choose *Code block*, then pick from ~50 languages in the same popup (including `dataview`, `dataviewjs`, `tasks`, `query`, `base`). *No language* gives a plain fence, and any language that isn't listed can simply be typed and used as-is.
 - **Your own snippets** — add blocks in the settings (name + template, `{cursor}` marks the writing position) and they join the menu as their own group.
+- **Recent first** — the last five blocks you inserted lead the menu as a *Recent* group when you type just `/`; while filtering they win ties.
 - **Radically clean** — a floating glass panel with a gliding selection pill. It appears, delivers, disappears. No toolbar, no chrome.
 
 ## The keyboard layer
@@ -63,7 +64,6 @@ Slashosaurus runs entirely offline. It makes zero network requests, collects not
 
 ## Roadmap
 
-- Recently-used blocks bubbling up when the query is empty
 - Per-snippet icons and aliases
 - More block types where a preview genuinely helps
 

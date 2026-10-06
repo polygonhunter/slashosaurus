@@ -4,6 +4,8 @@ import {
 	defaultSettings,
 	isSingleChar,
 	normalizeSettings,
+	pushRecent,
+	RECENT_LIMIT,
 } from "../src/core/settings-normalize";
 
 describe("normalizeSettings", () => {
@@ -18,6 +20,7 @@ describe("normalizeSettings", () => {
 			triggerChar: ";",
 			dateFormat: "DD.MM.YYYY",
 			snippets: [{ name: "Sig", template: "— {cursor}" }],
+			recent: ["h1", "snippet:Sig"],
 		};
 		expect(normalizeSettings(raw)).toEqual(raw);
 	});
@@ -58,6 +61,26 @@ describe("normalizeSettings", () => {
 		a.snippets.push({ name: "leak", template: "x" });
 		expect(DEFAULT_SETTINGS.snippets).toHaveLength(0);
 		expect(normalizeSettings({}).snippets).toHaveLength(0);
+	});
+});
+
+describe("recent", () => {
+	it("keeps unique non-empty string ids, capped at the limit", () => {
+		const recent = normalizeSettings({
+			recent: ["a", "a", "", 3, null, "b", "c", "d", "e", "f", "g"],
+		}).recent;
+		expect(recent).toEqual(["a", "b", "c", "d", "e"]);
+		expect(recent).toHaveLength(RECENT_LIMIT);
+	});
+
+	it("ignores a non-array value", () => {
+		expect(normalizeSettings({ recent: "h1" }).recent).toEqual([]);
+	});
+
+	it("pushRecent moves an id to the front without duplicates", () => {
+		expect(pushRecent(["a", "b", "c"], "c")).toEqual(["c", "a", "b"]);
+		expect(pushRecent(["a", "b", "c", "d", "e"], "x")).toEqual(["x", "a", "b", "c", "d"]);
+		expect(pushRecent([], "a")).toEqual(["a"]);
 	});
 });
 

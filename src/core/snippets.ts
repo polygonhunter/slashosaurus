@@ -7,11 +7,17 @@ export function validateSnippet(snippet: UserSnippet): string | null {
 	return null;
 }
 
+export function snippetId(name: string): string {
+	return `snippet:${name.trim()}`;
+}
+
 export function snippetsToBlockDefs(snippets: readonly UserSnippet[]): BlockDef[] {
 	return snippets
 		.filter((s) => validateSnippet(s) === null)
-		.map((s, index) => ({
-			id: `snippet-${index}`,
+		.map((s) => ({
+			// Name-based, not index-based: stays stable when snippets are
+			// reordered, so "recently used" keeps pointing at the same one.
+			id: snippetId(s.name),
 			name: s.name,
 			aliases: ["snippet"],
 			group: "snippet" as const,

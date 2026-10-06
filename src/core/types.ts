@@ -13,11 +13,21 @@ export const CURSOR = "{cursor}";
  */
 export const CURSOR_MARK = "\u0000C\u0000";
 
-export type GroupId = "text" | "callout" | "insert" | "snippet" | "bible";
+export type GroupId = "recent" | "text" | "callout" | "insert" | "snippet" | "bible";
 
-export const GROUP_ORDER: readonly GroupId[] = ["text", "callout", "insert", "snippet", "bible"];
+/** "recent" never appears in the catalog — it only labels the copies of the
+ *  last-used blocks that lead the menu when the query is empty. */
+export const GROUP_ORDER: readonly GroupId[] = [
+	"recent",
+	"text",
+	"callout",
+	"insert",
+	"snippet",
+	"bible",
+];
 
 export const GROUP_LABELS: Record<GroupId, string> = {
+	recent: "Recent",
 	text: "Text",
 	callout: "Callouts",
 	insert: "Insert",

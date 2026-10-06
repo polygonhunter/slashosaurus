@@ -13,12 +13,23 @@ export interface SlashosaurusSettings {
 	dateFormat: string;
 	/** User-defined blocks; {cursor} marks the writing position. */
 	snippets: UserSnippet[];
+	/** Ids of the most recently inserted blocks, newest first. */
+	recent: string[];
+}
+
+/** How many recently used blocks lead the menu. */
+export const RECENT_LIMIT = 5;
+
+/** Move `id` to the front, without duplicates, capped at RECENT_LIMIT. */
+export function pushRecent(recent: readonly string[], id: string): string[] {
+	return [id, ...recent.filter((r) => r !== id)].slice(0, RECENT_LIMIT);
 }
 
 export const DEFAULT_SETTINGS: Readonly<SlashosaurusSettings> = Object.freeze({
 	triggerChar: "/",
 	dateFormat: "YYYY-MM-DD",
 	snippets: [],
+	recent: [],
 });
 
 /** A fresh, unshared copy of the defaults (no array aliasing). */
@@ -27,6 +38,7 @@ export function defaultSettings(): SlashosaurusSettings {
 		triggerChar: DEFAULT_SETTINGS.triggerChar,
 		dateFormat: DEFAULT_SETTINGS.dateFormat,
 		snippets: [],
+		recent: [],
 	};
 }
 
@@ -67,6 +79,14 @@ export function normalizeSettings(raw: unknown): SlashosaurusSettings {
 			) {
 				result.snippets.push({ name: entry.name, template: entry.template });
 			}
+		}
+	}
+
+	if (Array.isArray(raw.recent)) {
+		for (const id of raw.recent as unknown[]) {
+			if (typeof id !== "string" || id.length === 0 || result.recent.includes(id)) continue;
+			result.recent.push(id);
+			if (result.recent.length === RECENT_LIMIT) break;
 		}
 	}
 

@@ -26,6 +26,14 @@ describe("snippetsToBlockDefs", () => {
 		});
 	});
 
+	it("derives stable, name-based ids", () => {
+		const defs = snippetsToBlockDefs([
+			{ name: " Meeting ", template: "x" },
+			{ name: "Sig", template: "y" },
+		]);
+		expect(defs.map((d) => d.id)).toEqual(["snippet:Meeting", "snippet:Sig"]);
+	});
+
 	it("keeps templates without {cursor} usable (cursor falls to the end)", () => {
 		const defs = snippetsToBlockDefs([{ name: "Sig", template: "— written by me" }]);
 		expect(defs[0]?.template).toBe("— written by me");

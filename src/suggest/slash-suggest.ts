@@ -171,7 +171,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 						: undefined,
 			},
 		);
-		const ranked = rankBlocks(defs, context.query, fuzzyFactory);
+		const ranked = rankBlocks(defs, context.query, fuzzyFactory, this.host.settings.recent);
 		if (context.query.length > 0) {
 			return ranked.map((def) => ({ kind: "block" as const, def }));
 		}
@@ -234,6 +234,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		}
 		if (item.def.special === "footnote") {
 			this.insertFootnote(context);
+			this.host.recordRecent(item.def.id);
 			return;
 		}
 		if (item.def.special === "command") {
@@ -245,6 +246,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 					item.def.commandId,
 				);
 				if (ran !== true) new Notice(`Slashosaurus: "${item.def.name}" is not available.`);
+				else this.host.recordRecent(item.def.id);
 			}
 			return;
 		}
@@ -252,6 +254,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			folded: evt.shiftKey && item.def.foldable === true,
 			language: null,
 		});
+		this.host.recordRecent(item.def.id);
 	}
 
 	/** Stage 1 → 2: collapse "/query" back to a bare trigger; the resulting
@@ -280,6 +283,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			return;
 		}
 		this.insertBlock(context, def, { folded: false, language });
+		this.host.recordRecent(def.id);
 		this.resetSession();
 		this.close();
 	}

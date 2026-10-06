@@ -29,6 +29,8 @@ export interface SettingsHost extends Plugin {
 	onSettingsChanged(): void;
 	/** Catalog plus snippets, cached until the next onSettingsChanged(). */
 	getBlockDefs(): readonly BlockDef[];
+	/** Note a block as just used (feeds the "Recent" group). */
+	recordRecent(id: string): void;
 }
 
 const HEADS_UP = {

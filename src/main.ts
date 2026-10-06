@@ -1,6 +1,6 @@
 import { debounce, Plugin } from "obsidian";
 import { CATALOG } from "./core/catalog";
-import { defaultSettings, normalizeSettings } from "./core/settings-normalize";
+import { defaultSettings, normalizeSettings, pushRecent } from "./core/settings-normalize";
 import { snippetsToBlockDefs } from "./core/snippets";
 import { GROUP_ORDER, type BlockDef } from "./core/types";
 import { SlashosaurusSettingTab, type SlashosaurusSettings } from "./settings";
@@ -57,6 +57,14 @@ export default class SlashosaurusPlugin extends Plugin {
 			);
 		}
 		return this.blockDefs;
+	}
+
+	/** Remember an inserted block for the "Recent" group. Debounced write —
+	 *  a burst of inserts costs one save. */
+	recordRecent(id: string): void {
+		if (this.settings.recent[0] === id) return;
+		this.settings.recent = pushRecent(this.settings.recent, id);
+		this.requestSave();
 	}
 
 	/** Called by the settings tab after every change: drops derived caches. */
