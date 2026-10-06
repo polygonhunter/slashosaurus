@@ -15,7 +15,10 @@ export default class SlashosaurusPlugin extends Plugin {
 		await this.loadSettings();
 		const stashTracker = new SelectionStashTracker(() => this.settings.triggerChar);
 		this.registerEditorExtension(stashTracker.extension());
-		this.registerEditorSuggest(new SlashSuggest(this.app, this, stashTracker));
+		const suggest = new SlashSuggest(this.app, this, stashTracker);
+		this.registerEditorSuggest(suggest);
+		// An open popover (and its pill observer) must not outlive the plugin.
+		this.register(() => suggest.close());
 		this.addSettingTab(new SlashosaurusSettingTab(this.app, this));
 	}
 

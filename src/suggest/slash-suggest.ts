@@ -201,6 +201,8 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 
 	close(): void {
 		this.pill.destroy();
+		// Drop references to the detached row elements.
+		this.rendered = [];
 		if (!this.stageSwitchInFlight) {
 			this.resetSession();
 		}
