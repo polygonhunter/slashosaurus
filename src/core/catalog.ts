@@ -164,7 +164,7 @@ export const CATALOG: readonly BlockDef[] = [
 	{
 		id: "date",
 		name: "Today's date",
-		aliases: ["date", "today", "now"],
+		aliases: ["date", "today"],
 		group: "insert",
 		template: "{date}{cursor}",
 		wrap: "none",

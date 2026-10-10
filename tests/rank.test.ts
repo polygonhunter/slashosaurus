@@ -47,6 +47,10 @@ describe("rankBlocks", () => {
 		expect(ranked[0]?.id).toBe("callout-abstract");
 	});
 
+	it('ranks the current time first for "now"', () => {
+		expect(rankBlocks(CATALOG, "now", testFuzzy)[0]?.id).toBe("time");
+	});
+
 	it("drops non-matching blocks entirely", () => {
 		const ranked = rankBlocks(CATALOG, "zzzz", testFuzzy);
 		expect(ranked).toHaveLength(0);
