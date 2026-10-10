@@ -69,8 +69,10 @@ export function isBlockLevel(def: BlockDef): boolean {
 	return def.wrap === "none" && def.template.includes("\n");
 }
 
-/** Only whitespace and quote markers — typing "> /note" stays in the quote. */
-const CONTAINER_ONLY = /^(?:\s*>)*\s*$/;
+/** Only whitespace, quote markers and at most one empty list or task marker
+ *  — "> /note" stays in the quote, "- /h2" stays in the list item instead of
+ *  leaving an empty bullet behind (Enter in a list, then /…). */
+const CONTAINER_ONLY = /^(?:\s*>)*\s*(?:(?:[-*+]|\d+[.)])(?: \[.\])? )?\s*$/;
 
 /**
  * Make a block-level insertion fit the line it lands on: text left of the

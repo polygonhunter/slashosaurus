@@ -151,6 +151,16 @@ describe("fitToLine", () => {
 		expect(fit("math", "", "Hallo").text).toBe("$$\n\n$$\n");
 	});
 
+	it("treats an empty list or task marker as an empty line", () => {
+		expect(fit("h2", "- ", "").text).toBe("## ");
+		expect(fit("quote", "1. ", "").text).toBe("> ");
+		expect(fit("callout-note", "- [ ] ", "").text).toBe("> [!note]\n> ");
+		expect(fit("h2", "> * ", "").text).toBe("## ");
+		// A list item with text still pushes the block onto its own line.
+		expect(fit("h2", "- item ", "").text).toBe("\n## ");
+		expect(fit("h2", "-", "").text).toBe("\n## ");
+	});
+
 	it("separates divider and table from text by a blank line", () => {
 		// "abc\n---" would be a setext heading.
 		expect(fit("divider", "abc", "").text).toBe("\n\n---\n");
