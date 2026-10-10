@@ -39,6 +39,15 @@ export default class SlashosaurusPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	/** data.json changed on disk (Sync, Git, iCloud). Adopt it — otherwise
+	 *  the next debounced save (e.g. after an insert updates "recent") would
+	 *  write the stale in-memory state back over the newer file. */
+	async onExternalSettingsChange(): Promise<void> {
+		this.requestSave.cancel();
+		await this.loadSettings();
+		this.onSettingsChanged();
+	}
+
 	onunload(): void {
 		// Don't lose the last keystrokes if the plugin is disabled mid-typing.
 		this.requestSave.run();
