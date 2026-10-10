@@ -327,8 +327,10 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 	private insertFootnote(context: EditorSuggestContext): void {
 		const { editor } = context;
 		// The typed "/query" is still in the document but can't contain "[^",
-		// so it never affects the numbering.
-		const plan = planFootnote(editor.getValue());
+		// so it never affects the numbering. A selection the trigger replaced
+		// is no longer in the document but comes back with the marker — its
+		// footnotes must count too, or a number could be handed out twice.
+		const plan = planFootnote(editor.getValue(), this.pendingSelection ?? "");
 		const lastLine = editor.lastLine();
 		const docEnd = { line: lastLine, ch: editor.getLine(lastLine).length };
 		// A selection the trigger replaced stays in front of the marker —

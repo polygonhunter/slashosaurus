@@ -20,4 +20,11 @@ describe("planFootnote", () => {
 		expect(planFootnote("text").appendText).toBe("\n[^1]: ");
 		expect(planFootnote("text\n").appendText).toBe("[^1]: ");
 	});
+
+	it("counts footnotes in a pending selection that is not in the document", () => {
+		const plan = planFootnote("/\n\n[^1]: a\n", "see[^1] and[^2]");
+		expect(plan.marker).toBe("[^3]");
+		// The newline check still looks at the document only.
+		expect(planFootnote("/", "x[^1]").appendText).toBe("\n[^2]: ");
+	});
 });

@@ -10,19 +10,29 @@ export interface FootnotePlan {
 	appendText: string;
 }
 
-export function planFootnote(doc: string): FootnotePlan {
+/**
+ * `pending` is text that will be re-inserted with the marker but is not in
+ * `doc` right now (a selection the trigger replaced). It counts for the
+ * numbering only, not for the trailing-newline check.
+ */
+export function planFootnote(doc: string, pending = ""): FootnotePlan {
 	// Next number = highest numeric footnote + 1; named footnotes ([^why])
 	// don't participate in numbering.
-	let highest = 0;
-	const re = /\[\^(\d+)\]/g;
-	let match: RegExpExecArray | null;
-	while ((match = re.exec(doc)) !== null) {
-		highest = Math.max(highest, Number(match[1]));
-	}
+	const highest = Math.max(highestFootnote(doc), highestFootnote(pending));
 	const marker = `[^${highest + 1}]`;
 	const needsNewline = doc.length > 0 && !doc.endsWith("\n");
 	return {
 		marker,
 		appendText: `${needsNewline ? "\n" : ""}${marker}: `,
 	};
+}
+
+function highestFootnote(text: string): number {
+	let highest = 0;
+	const re = /\[\^(\d+)\]/g;
+	let match: RegExpExecArray | null;
+	while ((match = re.exec(text)) !== null) {
+		highest = Math.max(highest, Number(match[1]));
+	}
+	return highest;
 }
