@@ -61,8 +61,10 @@ export function resolveCursor(template: string, marker: string = CURSOR): Insert
 }
 
 /** Blocks that only work at the start of their own line. Inline constructs
- *  and single-line "none" blocks (date, plugin commands) may sit mid-line. */
+ *  and single-line "none" blocks (date, plugin commands) may sit mid-line;
+ *  the math block wraps a selection inline but still needs its own line. */
 export function isBlockLevel(def: BlockDef): boolean {
+	if (def.block === true) return true;
 	if (def.wrap === "prefixLines" || def.wrap === "fenced") return true;
 	return def.wrap === "none" && def.template.includes("\n");
 }

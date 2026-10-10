@@ -65,6 +65,8 @@ export interface BlockDef {
 	template: string; // may contain {cursor}, {selection}, {date}, {time}, {title}, {fold}, {lang}
 	wrap: WrapKind;
 	linePrefix?: string; // only for wrap === "prefixLines"
+	/** Needs its own line although the selection wraps inline (math block). */
+	block?: boolean;
 	tile: TileSpec;
 	special?: "codeblock" | "footnote" | "date" | "command";
 	foldable?: boolean; // callouts: Shift+Enter inserts the collapsed variant

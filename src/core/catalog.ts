@@ -123,6 +123,7 @@ export const CATALOG: readonly BlockDef[] = [
 		group: "insert",
 		template: "$$\n{cursor}\n$$",
 		wrap: "inline",
+		block: true,
 		tile: { kind: "mono", sample: "∑x" },
 	},
 	{

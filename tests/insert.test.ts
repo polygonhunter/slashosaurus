@@ -144,6 +144,13 @@ describe("fitToLine", () => {
 		expect(fit("h1", "   ", "").text).toBe("# ");
 	});
 
+	it("gives the math block its own line (Text /math, /math before Hallo)", () => {
+		const after = fit("math", "Text ", "");
+		expect(after.text).toBe("\n$$\n\n$$");
+		expect(after.cursor).toEqual({ lineDelta: 2, ch: 0 });
+		expect(fit("math", "", "Hallo").text).toBe("$$\n\n$$\n");
+	});
+
 	it("separates divider and table from text by a blank line", () => {
 		// "abc\n---" would be a setext heading.
 		expect(fit("divider", "abc", "").text).toBe("\n\n---\n");
