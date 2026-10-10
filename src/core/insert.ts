@@ -14,7 +14,22 @@ function markCursor(template: string): string {
 	return template.slice(0, idx) + CURSOR_MARK + rest;
 }
 
-const SELECTION = "{selection}";
+/**
+ * Fill {name} everywhere, but leave {{name}} alone: that is Templater/core
+ * Templates syntax a user snippet may carry on purpose, and filling the inner
+ * braces would mangle it into "{value}".
+ */
+function fillPlaceholder(template: string, name: string, value: string): string {
+	const escaped = `{{${name}}}`;
+	return template
+		.split(escaped)
+		.map((part) => replaceAllLiteral(part, `{${name}}`, value))
+		.join(escaped);
+}
+
+function hasPlaceholder(template: string, name: string): boolean {
+	return template.split(`{{${name}}}`).some((part) => part.includes(`{${name}}`));
+}
 
 /**
  * Resolve a template into the final text plus the cursor position relative to
@@ -26,12 +41,12 @@ export function buildInsertion(def: BlockDef, env: TemplateEnv): InsertPlan {
 	let template = markCursor(def.template);
 	template = replaceAllLiteral(template, "{lang}", env.language ?? "");
 	template = replaceAllLiteral(template, "{fold}", env.folded ? "-" : "");
-	template = replaceAllLiteral(template, "{date}", env.date);
-	template = replaceAllLiteral(template, "{time}", env.time);
-	template = replaceAllLiteral(template, "{title}", env.title);
-	if (template.includes(SELECTION)) {
+	template = fillPlaceholder(template, "date", env.date);
+	template = fillPlaceholder(template, "time", env.time);
+	template = fillPlaceholder(template, "title", env.title);
+	if (hasPlaceholder(template, "selection")) {
 		// Last, so placeholders inside the selected text stay literal.
-		template = replaceAllLiteral(template, SELECTION, env.selection ?? "");
+		template = fillPlaceholder(template, "selection", env.selection ?? "");
 	} else if (env.selection !== null && env.selection.length > 0) {
 		template = embedSelection(
 			template,

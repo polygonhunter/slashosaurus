@@ -181,6 +181,15 @@ describe("snippet placeholders {time}, {title}, {selection}", () => {
 		tile: { kind: "icon", icon: "x" },
 	});
 
+	it("leaves double-brace {{title}}/{{date}}/{{selection}} untouched", () => {
+		const plan = buildInsertion(
+			snippet("{{title}} {title} {{date}} {{time}} {{selection}}{cursor}"),
+			env({ selection: "sel" }),
+		);
+		// No single-brace {selection} → the selection is embedded inline.
+		expect(plan.text).toBe("{{title}} My Note {{date}} {{time}} {{selection}}sel");
+	});
+
 	it("fills {time} and {title}", () => {
 		expect(buildInsertion(snippet("## {title} – {date} {time}"), env()).text).toBe(
 			"## My Note – 2026-07-17 09:30",
