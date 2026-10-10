@@ -66,6 +66,9 @@ export function embedSelection(
 			return widenFence(template, selection).replace(marker, () => selection) + "\n" + marker;
 		case "none":
 			// Block doesn't accept content — re-emit the selection above it.
-			return selection + "\n" + template;
+			// Multi-line blocks (divider, table) need a blank line between:
+			// "text\n---" would turn the text into a setext heading, and a
+			// table can't interrupt a paragraph.
+			return selection + (template.includes("\n") ? "\n\n" : "\n") + template;
 	}
 }

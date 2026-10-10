@@ -44,9 +44,12 @@ describe("embedSelection", () => {
 		);
 	});
 
-	it("none: selection is preserved above the block", () => {
+	it("none: selection is preserved above the block, a blank line before multi-line blocks", () => {
 		expect(embedSelection("---\n{cursor}", "keep me", "none", "")).toBe(
-			"keep me\n---\n{cursor}",
+			"keep me\n\n---\n{cursor}",
+		);
+		expect(embedSelection("{date}{cursor}", "keep me", "none", "")).toBe(
+			"keep me\n{date}{cursor}",
 		);
 	});
 });
@@ -66,7 +69,8 @@ describe("buildInsertion with a selection", () => {
 
 	it("keeps the selection when the block accepts none", () => {
 		const plan = buildInsertion(byId("divider"), env("do not lose this"));
-		expect(plan.text).toBe("do not lose this\n---\n");
+		// Blank line: "text\n---" would be a setext heading.
+		expect(plan.text).toBe("do not lose this\n\n---\n");
 	});
 
 	it("turns each selected line into a heading", () => {
