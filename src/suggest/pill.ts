@@ -12,6 +12,9 @@ export class SelectionPill {
 	private observer: MutationObserver | null = null;
 	/** Pending animation frame for a batched update(), or 0. */
 	private frame = 0;
+	/** Window that owns the list — a popout's own, not the main window, whose
+	 *  frames are throttled while it is minimized or hidden. */
+	private win: Window = window;
 
 	/** Idempotent; call freely on every render pass. */
 	mount(containerEl: HTMLElement): void {
@@ -29,6 +32,7 @@ export class SelectionPill {
 			return;
 		}
 		this.listEl = listEl;
+		this.win = listEl.win;
 		this.pillEl = listEl.createDiv({ cls: "slashosaurus-pill is-teleporting" });
 		this.observer = new MutationObserver((records) => {
 			// The pill's own class flips (is-teleporting) are no news.
@@ -48,7 +52,7 @@ export class SelectionPill {
 	 *  once per frame. */
 	private scheduleUpdate(): void {
 		if (this.frame !== 0) return;
-		this.frame = window.requestAnimationFrame(() => {
+		this.frame = this.win.requestAnimationFrame(() => {
 			this.frame = 0;
 			this.update();
 		});
@@ -77,15 +81,16 @@ export class SelectionPill {
 		});
 		if (pill.hasClass("is-teleporting")) {
 			// Two frames: land instantly first, then transitions come back on.
-			window.requestAnimationFrame(() => {
-				window.requestAnimationFrame(() => pill.removeClass("is-teleporting"));
+			const win = this.win;
+			win.requestAnimationFrame(() => {
+				win.requestAnimationFrame(() => pill.removeClass("is-teleporting"));
 			});
 		}
 	}
 
 	destroy(): void {
 		if (this.frame !== 0) {
-			window.cancelAnimationFrame(this.frame);
+			this.win.cancelAnimationFrame(this.frame);
 			this.frame = 0;
 		}
 		this.observer?.disconnect();
