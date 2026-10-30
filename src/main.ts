@@ -2,7 +2,7 @@ import { debounce, Plugin } from "obsidian";
 import { CATALOG } from "./core/catalog";
 import { defaultSettings, normalizeSettings, pushRecent } from "./core/settings-normalize";
 import { snippetsToBlockDefs } from "./core/snippets";
-import { GROUP_ORDER, type BlockDef } from "./core/types";
+import type { BlockDef } from "./core/types";
 import { SlashosaurusSettingTab, type SlashosaurusSettings } from "./settings";
 import { SelectionStashTracker } from "./suggest/selection-stash";
 import { SlashSuggest } from "./suggest/slash-suggest";
@@ -12,7 +12,17 @@ export default class SlashosaurusPlugin extends Plugin {
 
 	/** Coalesces bursts of edits (typing in a settings field) into one
 	 *  data.json write once the user pauses. */
-	readonly requestSave = debounce(() => void this.saveData(this.settings), 400, true);
+	readonly requestSave = debounce(
+		() => {
+			this.saveData(this.settings).catch((error) => {
+				console.error("Slashosaurus: could not save settings", error);
+			});
+		},
+		400,
+		true,
+	);
+
+	private settingTab: SlashosaurusSettingTab | null = null;
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
@@ -22,7 +32,8 @@ export default class SlashosaurusPlugin extends Plugin {
 		this.registerEditorSuggest(suggest);
 		// An open popover (and its pill observer) must not outlive the plugin.
 		this.register(() => suggest.close());
-		this.addSettingTab(new SlashosaurusSettingTab(this.app, this));
+		this.settingTab = new SlashosaurusSettingTab(this.app, this);
+		this.addSettingTab(this.settingTab);
 	}
 
 	async loadSettings(): Promise<void> {
@@ -46,6 +57,8 @@ export default class SlashosaurusPlugin extends Plugin {
 		this.requestSave.cancel();
 		await this.loadSettings();
 		this.onSettingsChanged();
+		// An open tab still edits the replaced settings object — redraw it.
+		this.settingTab?.refreshIfOpen();
 	}
 
 	onunload(): void {
@@ -53,7 +66,7 @@ export default class SlashosaurusPlugin extends Plugin {
 		this.requestSave.run();
 	}
 
-	/** Built-in catalog plus the user's snippets, in empty-query order. */
+	/** Built-in catalog plus the user's snippets (rankBlocks groups them). */
 	private blockDefs: readonly BlockDef[] | null = null;
 
 	/** Cached per settings state, so typing in the editor doesn't rebuild the
@@ -61,9 +74,7 @@ export default class SlashosaurusPlugin extends Plugin {
 	 *  the suggest filters that per trigger, since plugins come and go. */
 	getBlockDefs(): readonly BlockDef[] {
 		if (this.blockDefs === null) {
-			this.blockDefs = [...CATALOG, ...snippetsToBlockDefs(this.settings.snippets)].sort(
-				(a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group),
-			);
+			this.blockDefs = [...CATALOG, ...snippetsToBlockDefs(this.settings.snippets)];
 		}
 		return this.blockDefs;
 	}

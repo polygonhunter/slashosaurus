@@ -52,7 +52,7 @@ Headings 1–6 · bulleted, numbered and to-do lists · quote · divider · **al
 Install, enable, type `/`. Two things worth knowing:
 
 - **Obsidian's core "Slash commands" plugin** also opens a menu on `/`. Disable it under *Settings → Core plugins* — or give Slashosaurus a different trigger character in its settings; both menus side by side is chaos nobody needs.
-- The trigger only fires at the start of a line or after a space, so URLs and file paths never open the menu.
+- The trigger only fires at the start of a line or after a space, so URLs and paths like `a/b` never open the menu — and neither does anything inside code blocks, math blocks, inline code or frontmatter.
 
 ## Integrations
 

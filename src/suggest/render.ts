@@ -8,11 +8,10 @@ import type { BlockDef, TileSpec } from "../core/types";
  * plugin — it shows what the block will look like, in the theme's own colors.
  */
 export function renderBlockItem(def: BlockDef, el: HTMLElement, groupLabel?: string): void {
-	el.addClass("slashosaurus-item");
-	// Screen readers get the block's name, not "H2 · Aa · ```" tile noise.
-	el.setAttr("aria-label", def.name);
+	// Tile and alias hints are aria-hidden, so screen readers get the
+	// block's name, not "H2 · Aa · ```" tile noise. No aria-label: Obsidian
+	// would show it as a hover tooltip over the menu.
 	if (groupLabel) {
-		el.addClass("slashosaurus-has-group");
 		el.createDiv({ cls: "slashosaurus-group", text: groupLabel });
 	}
 	const row = el.createDiv({ cls: "slashosaurus-row" });
@@ -35,8 +34,6 @@ export function renderLanguageItem(
 	el: HTMLElement,
 	kind: "none" | "custom" | "known" = "known",
 ): void {
-	el.addClass("slashosaurus-item");
-	el.setAttr("aria-label", kind === "none" ? "No language" : language);
 	const row = el.createDiv({ cls: "slashosaurus-row" });
 	const tile = row.createDiv({ cls: "slashosaurus-tile mod-code", attr: { "aria-hidden": "true" } });
 	tile.createSpan({ cls: "slashosaurus-tile-mono", text: "```" });

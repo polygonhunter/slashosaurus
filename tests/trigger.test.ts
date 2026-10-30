@@ -66,4 +66,22 @@ describe("detectTrigger", () => {
 		expect(detectTrigger("-to-do", "-")).toEqual({ startCh: 0, query: "to-do" });
 		expect(detectTrigger("text x1", "x")).toEqual({ startCh: 5, query: "1" });
 	});
+
+	it("accepts any non-space language in loose mode", () => {
+		expect(detectTrigger("/c++", "/", true)).toEqual({ startCh: 0, query: "c++" });
+		expect(detectTrigger("> /f#", "/", true)).toEqual({ startCh: 2, query: "f#" });
+		expect(detectTrigger("/c+", "/")).toBeNull();
+		// Whitespace and backticks still end it; so does a second trigger.
+		expect(detectTrigger("/c +", "/", true)).toBeNull();
+		expect(detectTrigger("/c`", "/", true)).toBeNull();
+		expect(detectTrigger("/a/b", "/", true)).toBeNull();
+	});
+
+	it("escapes class-special triggers in loose mode", () => {
+		expect(detectTrigger("-c++", "-", true)).toEqual({ startCh: 0, query: "c++" });
+		expect(detectTrigger("^vb.net", "^", true)).toEqual({ startCh: 0, query: "vb.net" });
+		expect(detectTrigger("]x", "]", true)).toEqual({ startCh: 0, query: "x" });
+		expect(detectTrigger("\\x", "\\", true)).toEqual({ startCh: 0, query: "x" });
+	});
 });
+

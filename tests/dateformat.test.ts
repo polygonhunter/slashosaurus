@@ -45,5 +45,34 @@ describe("formatDate", () => {
 		expect(formatDate(new Date(2021, 0, 3), "W")).toBe("53");
 		expect(formatDate(new Date(2021, 0, 4), "W")).toBe("1");
 	});
-});
 
+	it("formats the ISO week-year next to the ISO week", () => {
+		// 2021-01-03 belongs to 2020-W53, 2024-12-30 already to 2025-W01.
+		expect(formatDate(new Date(2021, 0, 3), "GGGG-[W]WW")).toBe("2020-W53");
+		expect(formatDate(new Date(2024, 11, 30), "GGGG-[W]WW")).toBe("2025-W01");
+	});
+
+	it("falls back to ISO rules for locale weeks without a locale", () => {
+		expect(formatDate(new Date(2021, 0, 3), "gggg-[W]ww w")).toBe("2020-W53 53");
+	});
+
+	it("uses the locale's week rules for gggg/ww/w", () => {
+		// US weeks start on Sunday and week 1 holds January 1st.
+		const us = formatDate(new Date(2021, 0, 3), "gggg-ww", "en");
+		const isoGerman = formatDate(new Date(2021, 0, 3), "gggg-ww", "de");
+		expect(isoGerman).toBe("2020-53");
+		// Runtimes without Intl week info fall back to ISO.
+		expect(["2021-02", "2020-53"]).toContain(us);
+		expect(formatDate(new Date(2026, 11, 31), "gggg-ww", "en")).toMatch(/^(2027-01|2026-53)$/);
+	});
+
+	it("takes month and weekday names from the locale", () => {
+		expect(formatDate(date, "dddd, D. MMMM", "de")).toBe("Mittwoch, 1. Januar");
+		expect(formatDate(date, "dddd, MMMM D", "en")).toBe("Wednesday, January 1");
+		expect(formatDate(date, "ddd MMM", "en")).toBe("Wed Jan");
+	});
+
+	it("falls back to English names for an unusable locale", () => {
+		expect(formatDate(date, "MMMM", "not a locale!")).toBe("January");
+	});
+});

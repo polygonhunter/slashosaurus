@@ -68,7 +68,7 @@ export interface BlockDef {
 	/** Needs its own line although the selection wraps inline (math block). */
 	block?: boolean;
 	tile: TileSpec;
-	special?: "codeblock" | "footnote" | "date" | "command";
+	special?: "codeblock" | "footnote" | "command";
 	foldable?: boolean; // callouts: Shift+Enter inserts the collapsed variant
 	commandId?: string; // only for special === "command": the command to execute on select
 	requiresPlugin?: string; // hidden unless this community plugin is installed and enabled
@@ -103,6 +103,12 @@ export interface InsertPlan {
 	 * lineDelta > 0 → `ch` is the absolute column on that line.
 	 */
 	cursor: { lineDelta: number; ch: number };
+	/**
+	 * Characters left of the trigger the text replaces as well (an empty list
+	 * marker a list block takes over). The insertion then starts that much
+	 * earlier, and `cursor` is relative to that earlier start.
+	 */
+	consumeBefore?: number;
 }
 
 export interface UserSnippet {

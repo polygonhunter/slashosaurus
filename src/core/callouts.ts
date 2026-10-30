@@ -3,7 +3,7 @@
  * uses and the official type aliases. The colors live in styles.css (theme
  * variable plus Obsidian's default as fallback); note the variable names do
  * NOT match the type names one-to-one: note→default, abstract→summary,
- * tip→important, failure→fail, danger→error.
+ * failure→fail, danger→error.
  */
 
 export interface CalloutSpec {

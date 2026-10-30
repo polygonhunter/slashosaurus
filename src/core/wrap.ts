@@ -54,10 +54,19 @@ export function embedSelection(
 			return putAtMarker(template, marker, selection + marker);
 		case "prefixLines": {
 			// First selection line sits behind the prefix the template already
-			// carries; every further line gets its own prefix.
-			const lines = selection.split("\n");
-			const joined = lines
-				.map((line, i) => (i === 0 ? line : prefixForLine(linePrefix, i) + line))
+			// carries; every further line gets its own prefix. Blank lines
+			// stay blank — an empty bullet or heading is noise — except in a
+			// quote, where the marker keeps both paragraphs in it.
+			const keepBlank = !linePrefix.startsWith(">");
+			let item = 0;
+			const joined = selection
+				.split("\n")
+				.map((line, i) => {
+					if (i === 0) return line;
+					if (keepBlank && line.trim().length === 0) return line;
+					item++;
+					return prefixForLine(linePrefix, item) + line;
+				})
 				.join("\n");
 			return putAtMarker(template, marker, joined + marker);
 		}
@@ -65,10 +74,11 @@ export function embedSelection(
 			// Selection fills the block, cursor continues below it.
 			return widenFence(template, selection).replace(marker, () => selection) + "\n" + marker;
 		case "none":
-			// Block doesn't accept content — re-emit the selection above it.
-			// Multi-line blocks (divider, table) need a blank line between:
+			// Block doesn't accept content — re-emit the selection in front.
+			// Multi-line blocks (divider, table) go below a blank line:
 			// "text\n---" would turn the text into a setext heading, and a
-			// table can't interrupt a paragraph.
-			return selection + (template.includes("\n") ? "\n\n" : "\n") + template;
+			// table can't interrupt a paragraph. Single-line ones (date,
+			// time) stay on the line instead of breaking the paragraph.
+			return selection + (template.includes("\n") ? "\n\n" : " ") + template;
 	}
 }

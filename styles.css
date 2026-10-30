@@ -114,7 +114,7 @@
 
 /* Callouts — the reason this plugin exists. Each type pulls the theme's own
    RGB triple; the fallback is Obsidian's default palette. Variable names are
-   not 1:1 with type names (note→default, tip→important, danger→error …). */
+   not 1:1 with type names (note→default, abstract→summary, danger→error …). */
 
 .slashosaurus-tile.mod-callout {
 	background-color: rgba(var(--slashosaurus-accent), 0.14);
@@ -129,7 +129,7 @@
 .slashosaurus-tile.mod-callout-abstract { --slashosaurus-accent: var(--callout-summary, 0, 191, 188); }
 .slashosaurus-tile.mod-callout-info     { --slashosaurus-accent: var(--callout-info, 0, 184, 212); }
 .slashosaurus-tile.mod-callout-todo     { --slashosaurus-accent: var(--callout-todo, 0, 184, 212); }
-.slashosaurus-tile.mod-callout-tip      { --slashosaurus-accent: var(--callout-important, 0, 191, 188); }
+.slashosaurus-tile.mod-callout-tip      { --slashosaurus-accent: var(--callout-tip, 0, 191, 188); }
 .slashosaurus-tile.mod-callout-success  { --slashosaurus-accent: var(--callout-success, 68, 207, 110); }
 .slashosaurus-tile.mod-callout-question { --slashosaurus-accent: var(--callout-question, 236, 117, 0); }
 .slashosaurus-tile.mod-callout-warning  { --slashosaurus-accent: var(--callout-warning, 236, 117, 0); }

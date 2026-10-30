@@ -170,7 +170,6 @@ export const CATALOG: readonly BlockDef[] = [
 		template: "{date}{cursor}",
 		wrap: "none",
 		tile: { kind: "icon", icon: "lucide-calendar" },
-		special: "date",
 	},
 	{
 		id: "time",

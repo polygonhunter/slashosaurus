@@ -140,7 +140,8 @@ describe("fitToLine", () => {
 	});
 
 	it("treats quote markers and indentation as an empty line", () => {
-		expect(fit("callout-tip", "> ", "").text).toBe("> [!tip]\n> ");
+		// The nested callout's body is nested too, not one level shallower.
+		expect(fit("callout-tip", "> ", "").text).toBe("> [!tip]\n> > ");
 		expect(fit("h1", "   ", "").text).toBe("# ");
 	});
 
@@ -154,7 +155,8 @@ describe("fitToLine", () => {
 	it("treats an empty list or task marker as an empty line", () => {
 		expect(fit("h2", "- ", "").text).toBe("## ");
 		expect(fit("quote", "1. ", "").text).toBe("> ");
-		expect(fit("callout-note", "- [ ] ", "").text).toBe("> [!note]\n> ");
+		// The callout body stays in the list item, under its text.
+		expect(fit("callout-note", "- [ ] ", "").text).toBe("> [!note]\n  > ");
 		expect(fit("h2", "> * ", "").text).toBe("## ");
 		// A list item with text still pushes the block onto its own line.
 		expect(fit("h2", "- item ", "").text).toBe("\n## ");
@@ -167,6 +169,85 @@ describe("fitToLine", () => {
 		const table = fit("table", "abc ", "");
 		expect(table.text.startsWith("\n\n| ")).toBe(true);
 		expect(table.cursor).toEqual({ lineDelta: 2, ch: 2 });
+	});
+});
+
+describe("fitToLine keeps every line in its container", () => {
+	const fit = (id: string, before: string, after = "", overrides: Partial<TemplateEnv> = {}) =>
+		fitToLine(buildInsertion(byId(id), env(overrides)), byId(id), before, after);
+
+	it("keeps a code block inside a quote or callout", () => {
+		const plan = fit("codeblock", "> ", "", { language: "js" });
+		expect(plan.text).toBe("```js\n> \n> ```");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 2 });
+	});
+
+	it("keeps a code block inside a list item, indented under its text", () => {
+		expect(fit("codeblock", "- ").text).toBe("```\n  \n  ```");
+		expect(fit("codeblock", "\t1. ").text).toBe("```\n\t   \n\t   ```");
+		expect(fit("codeblock", "> - ").text).toBe("```\n>   \n>   ```");
+	});
+
+	it("keeps a callout's body in the list item", () => {
+		const plan = fit("callout-note", "- ");
+		expect(plan.text).toBe("> [!note]\n  > ");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 4 });
+	});
+
+	it("nests a callout's body as deep as its title", () => {
+		const plan = fit("callout-warning", "> > ");
+		expect(plan.text).toBe("> [!warning]\n> > > ");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 6 });
+	});
+
+	it("keeps every table row and the math block in the quote", () => {
+		const table = fit("table", "> ");
+		expect(table.text.split("\n").slice(1).every((row) => row.startsWith("> |"))).toBe(true);
+		expect(table.cursor).toEqual({ lineDelta: 0, ch: 2 });
+		expect(fit("math", "> ").text).toBe("$$\n> \n> $$");
+	});
+
+	it("prefixes every line of a wrapped multi-line selection", () => {
+		const plan = fit("h2", "> ", "", { selection: "a\nb" });
+		expect(plan.text).toBe("## a\n> ## b");
+		expect(plan.cursor).toEqual({ lineDelta: 1, ch: 6 });
+	});
+
+	it("moves trailing text below the block but keeps it in the quote", () => {
+		expect(fit("codeblock", "> ", "rest").text).toBe("```\n> \n> ```\n> ");
+	});
+
+	it("keeps a block that starts a new line after text in the quote", () => {
+		const plan = fit("codeblock", "> text ", "");
+		expect(plan.text).toBe("\n> ```\n> \n> ```");
+		expect(plan.cursor).toEqual({ lineDelta: 2, ch: 2 });
+		expect(fit("table", "> text ").text.startsWith("\n> \n> | ")).toBe(true);
+	});
+});
+
+describe("fitToLine on an empty list item", () => {
+	const fit = (id: string, before: string) =>
+		fitToLine(buildInsertion(byId(id), env()), byId(id), before, "");
+
+	it("lets a list block take over the empty marker instead of nesting", () => {
+		expect(fit("check-list", "- ")).toEqual({
+			text: "- [ ] ",
+			cursor: { lineDelta: 0, ch: 6 },
+			consumeBefore: 2,
+		});
+		expect(fit("numbered-list", "- ").consumeBefore).toBe(2);
+		expect(fit("bullet-list", "12. ").consumeBefore).toBe(4);
+		expect(fit("check-list", "- [ ] ").consumeBefore).toBe(6);
+	});
+
+	it("keeps quote markers and indentation in front of the new marker", () => {
+		expect(fit("bullet-list", "> \t- ").consumeBefore).toBe(2);
+		expect(fit("check-list", "  * ").consumeBefore).toBe(2);
+	});
+
+	it("leaves non-list blocks in the item", () => {
+		expect(fit("quote", "- ").consumeBefore).toBeUndefined();
+		expect(fit("h2", "- ").consumeBefore).toBeUndefined();
 	});
 });
 

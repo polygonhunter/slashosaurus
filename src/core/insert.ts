@@ -86,14 +86,23 @@ export function isBlockLevel(def: BlockDef): boolean {
 
 /** Only whitespace, quote markers and at most one empty list or task marker
  *  — "> /note" stays in the quote, "- /h2" stays in the list item instead of
- *  leaving an empty bullet behind (Enter in a list, then /…). */
-const CONTAINER_ONLY = /^(?:\s*>)*\s*(?:(?:[-*+]|\d+[.)])(?: \[.\])? )?\s*$/;
+ *  leaving an empty bullet behind (Enter in a list, then /…).
+ *  Groups: quote markers, indentation, list marker, trailing spaces. */
+const CONTAINER_ONLY = /^((?:\s*>)*)(\s*)(?:([-*+]|\d+[.)])(?: \[.\])? )?(\s*)$/;
+
+/** Quote markers in front of text — "> text /code" keeps the code in the quote. */
+const QUOTE_PREFIX = /^(?:\s*>)+ ?/;
+
+/** A def whose prefix is itself a list or task marker. */
+const LIST_PREFIX = /^(?:[-*+]|\d+[.)])(?: \[.\])? $/;
 
 /**
  * Make a block-level insertion fit the line it lands on: text left of the
  * trigger pushes the block onto its own line, and text right of the cursor
  * is moved below a multi-line block instead of gluing onto its last line
- * (e.g. behind a closing code fence).
+ * (e.g. behind a closing code fence). Every further line repeats the
+ * container the block sits in — quote markers, or a list item's indentation
+ * — so a code fence or table typed in a callout stays inside it.
  */
 export function fitToLine(
 	plan: InsertPlan,
@@ -104,17 +113,40 @@ export function fitToLine(
 	if (!isBlockLevel(def)) return plan;
 	let text = plan.text;
 	let cursor = plan.cursor;
+	let consumeBefore = 0;
+	let continuation: string;
 	const multiLine = text.includes("\n");
-	if (!CONTAINER_ONLY.test(lineBefore)) {
+	const container = CONTAINER_ONLY.exec(lineBefore);
+	if (container) {
+		const [, quotes = "", indent = "", marker, trailing = ""] = container;
+		if (marker !== undefined && LIST_PREFIX.test(def.linePrefix ?? "")) {
+			// A list block takes over the empty item's marker: "- " + /todo
+			// is "- [ ] ", not the nested "- - [ ] ".
+			consumeBefore = lineBefore.length - quotes.length - indent.length;
+			continuation = quotes + indent;
+		} else {
+			// Content of a list item continues under its text, so the
+			// marker turns into indentation of the same width.
+			const markerWidth = marker === undefined ? 0 : marker.length + 1;
+			continuation = quotes + indent + " ".repeat(markerWidth) + trailing;
+		}
+	} else {
 		// Divider and table need a blank line above: "text\n---" would turn
 		// the text into a setext heading, and tables don't interrupt a
 		// paragraph. Headings, quotes, lists and fences only need a new line.
 		const breaks = def.wrap === "none" ? "\n\n" : "\n";
 		text = breaks + text;
 		// The block now starts at column 0 of a later line, so the relative
-		// column becomes an absolute one unchanged.
+		// column becomes an absolute one (shifted by the continuation below).
 		cursor = { lineDelta: cursor.lineDelta + breaks.length, ch: cursor.ch };
+		continuation = QUOTE_PREFIX.exec(lineBefore)?.[0] ?? "";
 	}
 	if (multiLine && lineAfter.trim().length > 0) text += "\n";
-	return { text, cursor };
+	if (continuation.length > 0 && text.includes("\n")) {
+		text = text.split("\n").join("\n" + continuation);
+		if (cursor.lineDelta > 0) {
+			cursor = { lineDelta: cursor.lineDelta, ch: cursor.ch + continuation.length };
+		}
+	}
+	return consumeBefore > 0 ? { text, cursor, consumeBefore } : { text, cursor };
 }

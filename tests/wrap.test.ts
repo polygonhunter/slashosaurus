@@ -44,12 +44,34 @@ describe("embedSelection", () => {
 		);
 	});
 
-	it("none: selection is preserved above the block, a blank line before multi-line blocks", () => {
+	it("none: selection is preserved, a blank line before multi-line blocks", () => {
 		expect(embedSelection("---\n{cursor}", "keep me", "none", "")).toBe(
 			"keep me\n\n---\n{cursor}",
 		);
+	});
+
+	it("none: a single-line block stays on the selection's line", () => {
+		// "TBD" + /today must not break the paragraph.
 		expect(embedSelection("{date}{cursor}", "keep me", "none", "")).toBe(
-			"keep me\n{date}{cursor}",
+			"keep me {date}{cursor}",
+		);
+	});
+
+	it("prefixLines: blank lines stay blank in lists and headings, numbering skips them", () => {
+		expect(embedSelection("- {cursor}", "one\n\ntwo", "prefixLines", "- ")).toBe(
+			"- one\n\n- two{cursor}",
+		);
+		expect(embedSelection("1. {cursor}", "a\n\nb", "prefixLines", "1. ")).toBe(
+			"1. a\n\n2. b{cursor}",
+		);
+		expect(embedSelection("## {cursor}", "a\n  \nb", "prefixLines", "## ")).toBe(
+			"## a\n  \n## b{cursor}",
+		);
+	});
+
+	it("prefixLines: a quote keeps its marker on blank lines", () => {
+		expect(embedSelection("> {cursor}", "one\n\ntwo", "prefixLines", "> ")).toBe(
+			"> one\n> \n> two{cursor}",
 		);
 	});
 });

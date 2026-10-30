@@ -1,5 +1,6 @@
 import {
 	EditorSuggest,
+	getLanguage,
 	Notice,
 	prepareFuzzySearch,
 	type App,
@@ -10,6 +11,7 @@ import {
 	type TFile,
 } from "obsidian";
 import { filterAvailable } from "../core/availability";
+import { isInsideCode } from "../core/code-context";
 import { LANGUAGES } from "../core/catalog";
 import { formatDate } from "../core/dateformat";
 import { planFootnote } from "../core/footnote";
@@ -115,12 +117,21 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		_file: TFile | null,
 	): EditorSuggestTriggerInfo | null {
 		const lineBeforeCursor = editor.getLine(cursor.line).slice(0, cursor.ch);
-		const hit = detectTrigger(lineBeforeCursor, this.host.settings.triggerChar);
-		if (!hit) {
-			if (this.mode === "language" && !this.stageSwitchInFlight) {
-				// The trigger disappeared mid-language-pick (deleted, clicked
-				// away and typed elsewhere) — abandon the stage cleanly.
-				this.resetSession();
+		const hit = detectTrigger(
+			lineBeforeCursor,
+			this.host.settings.triggerChar,
+			// A language may be "c++" or "f#" — only whitespace ends it.
+			this.mode === "language",
+		);
+		// Code, math and frontmatter aren't written in Markdown: "cd /" +
+		// Enter in a shell block must stay a newline.
+		if (!hit || isInsideCode(editor, cursor.line, cursor.ch)) {
+			if (!this.stageSwitchInFlight) {
+				// The trigger disappeared (deleted, typed past, clicked away
+				// and typed elsewhere) — abandon the stage and anything that
+				// was pending for it.
+				if (this.mode === "language") this.resetStage();
+				this.dropPending();
 			}
 			return null;
 		}
@@ -140,7 +151,7 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 				// A different trigger session — old pending state is stale.
 				this.pendingSelection = null;
 				this.pendingAt = triggerOffset;
-				if (this.mode === "language") this.resetSession();
+				if (this.mode === "language") this.resetStage();
 			}
 		}
 
@@ -208,18 +219,29 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		this.pill.destroy();
 		// Drop references to the detached row elements.
 		this.rendered = [];
+		// The pending selection survives: the popup also closes when a typo
+		// matches nothing, and backspacing must bring the menu back with the
+		// selection still there. onTrigger drops it once the trigger is gone.
 		if (!this.stageSwitchInFlight) {
-			this.resetSession();
+			this.resetStage();
 		}
 		super.close();
 	}
 
-	private resetSession(): void {
+	private resetStage(): void {
 		this.mode = "blocks";
 		this.langTarget = null;
+		this.showBlockInstructions();
+	}
+
+	private dropPending(): void {
 		this.pendingSelection = null;
 		this.pendingAt = -1;
-		this.showBlockInstructions();
+	}
+
+	private resetSession(): void {
+		this.resetStage();
+		this.dropPending();
 	}
 
 	selectSuggestion(item: SuggestItem, evt: MouseEvent | KeyboardEvent): void {
@@ -297,7 +319,8 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		const now = new Date();
 		const env: TemplateEnv = {
 			selection: this.pendingSelection,
-			date: formatDate(now, this.host.settings.dateFormat),
+			// Month and day names in Obsidian's language, as moment would.
+			date: formatDate(now, this.host.settings.dateFormat, getLanguage()),
 			time: formatDate(now, "HH:mm"),
 			title: context.file?.basename ?? "",
 			folded: opts.folded,
@@ -310,22 +333,27 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 			editor.getLine(context.start.line).slice(0, context.start.ch),
 			editor.getLine(context.end.line).slice(context.end.ch),
 		);
-		editor.transaction({ changes: [{ from: context.start, to: context.end, text: plan.text }] });
+		// An empty list marker the block takes over is replaced along with it.
+		const from = { line: context.start.line, ch: context.start.ch - (plan.consumeBefore ?? 0) };
+		editor.transaction({ changes: [{ from, to: context.end, text: plan.text }] });
 		// The cursor is set separately: its position is in post-change
 		// coordinates, and a selection-only update adds no undo step.
 		editor.setCursor({
-			line: context.start.line + plan.cursor.lineDelta,
-			ch:
-				plan.cursor.lineDelta === 0
-					? context.start.ch + plan.cursor.ch
-					: plan.cursor.ch,
+			line: from.line + plan.cursor.lineDelta,
+			ch: plan.cursor.lineDelta === 0 ? from.ch + plan.cursor.ch : plan.cursor.ch,
 		});
-		this.pendingSelection = null;
-		this.pendingAt = -1;
+		this.dropPending();
 	}
 
 	private insertFootnote(context: EditorSuggestContext): void {
 		const { editor } = context;
+		// The trigger needs a space in front, but the marker belongs on the
+		// word: "word /fn" → "word[^1]". A replaced selection keeps its place.
+		const lineBefore = editor.getLine(context.start.line).slice(0, context.start.ch);
+		const from =
+			this.pendingSelection === null && /\S $/.test(lineBefore)
+				? { line: context.start.line, ch: context.start.ch - 1 }
+				: context.start;
 		// The typed "/query" is still in the document but can't contain "[^",
 		// so it never affects the numbering. A selection the trigger replaced
 		// is no longer in the document but comes back with the marker — its
@@ -343,15 +371,14 @@ export class SlashSuggest extends EditorSuggest<SuggestItem> {
 		// position, so they are merged into a single change.
 		editor.transaction({
 			changes: triggerAtDocEnd
-				? [{ from: context.start, to: context.end, text: markerText + plan.appendText }]
+				? [{ from, to: context.end, text: markerText + plan.appendText }]
 				: [
-						{ from: context.start, to: context.end, text: markerText },
+						{ from, to: context.end, text: markerText },
 						{ from: docEnd, text: plan.appendText },
 					],
 		});
 		const newLastLine = editor.lastLine();
 		editor.setCursor({ line: newLastLine, ch: editor.getLine(newLastLine).length });
-		this.pendingSelection = null;
-		this.pendingAt = -1;
+		this.dropPending();
 	}
 }

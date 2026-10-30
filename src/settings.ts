@@ -1,5 +1,6 @@
 import {
 	debounce,
+	getLanguage,
 	PluginSettingTab,
 	Setting,
 	type App,
@@ -77,8 +78,23 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 
 	/** Structural edits (delete, reorder): written immediately. */
 	private async persistNow(): Promise<void> {
-		await this.host.saveSettings();
+		try {
+			await this.host.saveSettings();
+		} catch (error) {
+			console.error("Slashosaurus: could not save settings", error);
+		}
 		this.host.onSettingsChanged();
+	}
+
+	/** The settings were reloaded from disk (Sync, Git). An open tab still
+	 *  holds the replaced objects — redraw it so edits land in the new ones. */
+	refreshIfOpen(): void {
+		if (!this.containerEl.isConnected) return;
+		if (typeof (this as { update?: () => void }).update === "function") {
+			this.refreshDefinitions();
+		} else {
+			this.renderLegacy();
+		}
 	}
 
 	hide(): void {
@@ -295,7 +311,11 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 					.setIcon("x")
 					.setTooltip("Remove")
 					.onClick(async () => {
-						settings.snippets.splice(index, 1);
+						// By identity, not the rendered index: a double click
+						// would otherwise also remove the snippet that moved up.
+						const current = settings.snippets.indexOf(snippet);
+						if (current === -1) return;
+						settings.snippets.splice(current, 1);
 						await this.persistNow();
 						this.renderLegacy();
 					}),
@@ -311,6 +331,6 @@ export class SlashosaurusSettingTab extends PluginSettingTab {
 	}
 
 	private dateFormatDesc(format: string): string {
-		return `Format for the "Today's date" block — tokens like YYYY, MM, DD, Do, ddd, W, HH, mm (literal text in [brackets]). Currently: ${formatDate(new Date(), format)}`;
+		return `Format for the "Today's date" block — tokens like YYYY, MM, DD, Do, ddd, W, HH, mm (literal text in [brackets]). Currently: ${formatDate(new Date(), format, getLanguage())}`;
 	}
 }
